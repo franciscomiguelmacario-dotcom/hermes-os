@@ -59,6 +59,11 @@ class CLI:
                 self.logger.info(self.brain.export_obsidian_report())
                 continue
 
+            if cmd.startswith("set-obsidian-path "):
+                path = cmd.replace("set-obsidian-path ", "", 1).strip()
+                self.logger.info(self.brain.set_obsidian_path(path))
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue

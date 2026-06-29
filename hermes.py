@@ -1,4 +1,4 @@
-from app.cli.cli import app
+from app.core.startup import Hermes
 
 if __name__ == "__main__":
-    app.run()
+    Hermes().start()

@@ -9,10 +9,24 @@ class ReportEngine:
         self.memory = memory
         self.tasks = tasks
         self.path = "data/reports"
-        self.obsidian_path = os.getenv("HERMES_OBSIDIAN_PATH", "data/obsidian/Hermes")
 
         os.makedirs(self.path, exist_ok=True)
-        os.makedirs(self.obsidian_path, exist_ok=True)
+        os.makedirs(self.get_obsidian_path(), exist_ok=True)
+
+    def get_obsidian_path(self):
+        return self.memory.get(
+            "obsidian_path",
+            os.getenv("HERMES_OBSIDIAN_PATH", "data/obsidian/Hermes")
+        )
+
+    def set_obsidian_path(self, path):
+        os.makedirs(path, exist_ok=True)
+        self.memory.set("obsidian_path", path)
+
+        return {
+            "status": "obsidian_path_saved",
+            "path": path
+        }
 
     def business_report(self):
         all_tasks = self.tasks.all()
@@ -104,8 +118,11 @@ Created: {report["created_at"]}
         return {"status": "exported", "file": filepath}
 
     def export_obsidian_report(self):
+        obsidian_path = self.get_obsidian_path()
+        os.makedirs(obsidian_path, exist_ok=True)
+
         filename = f"Hermes Business Report {datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.md"
-        filepath = os.path.join(self.obsidian_path, filename)
+        filepath = os.path.join(obsidian_path, filename)
 
         with open(filepath, "w") as f:
             f.write(self.markdown_content())

@@ -21,6 +21,7 @@ class Brain:
         self.tasks = TaskQueue(memory)
         self.workflows = WorkflowEngine(self.tasks, logger)
         self.reports = ReportEngine(memory, self.tasks)
+
         self.agent_loader = AgentLoader(logger)
         auto_agents = self.agent_loader.load(self, memory, bus)
 
@@ -97,14 +98,17 @@ class Brain:
     def export_report(self):
         return self.reports.export_business_report()
 
+    def export_markdown_report(self):
+        return self.reports.export_markdown_report()
+
     def export_obsidian_report(self):
         return self.reports.export_obsidian_report()
 
+    def set_obsidian_path(self, path):
+        return self.reports.set_obsidian_path(path)
+
     def tick(self):
         self.scheduler.run(self.agents)
-
-    def export_markdown_report(self):
-        return self.reports.export_markdown_report()
 
     def process(self, input_data):
         self.memory.set("last_input", input_data)
