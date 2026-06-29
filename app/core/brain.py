@@ -132,6 +132,9 @@ class Brain:
     def autopilot_once(self):
         return self.autopilot.run_once()
 
+    def autopilot_cycle(self, max_steps=5):
+        return self.autopilot.run_cycle(max_steps)
+
     def tick(self):
         self.scheduler.run(self.agents)
 

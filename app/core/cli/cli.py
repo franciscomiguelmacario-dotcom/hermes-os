@@ -36,8 +36,19 @@ class CLI:
                         "run <texto>",
                         "exit"
                         "autopilot",
-                    ]
+                        "autopilot-cycle <steps>",
+                 ]
                 })
+                continue
+
+            if cmd.startswith("autopilot-cycle"):
+                parts = cmd.split(" ")
+
+                max_steps = 5
+                if len(parts) == 2:
+                    max_steps = int(parts[1])
+
+                self.logger.info(self.brain.autopilot_cycle(max_steps))
                 continue
 
             if cmd == "clear-tasks":

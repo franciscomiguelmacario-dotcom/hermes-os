@@ -47,3 +47,25 @@ class AutopilotEngine:
             "status": "unknown_action",
             "decision": decision
         }
+
+    def run_cycle(self, max_steps=5):
+        history = []
+
+        for _ in range(max_steps):
+            result = self.run_once()
+            history.append(result)
+
+            if result["status"] in [
+                "needs_user_input",
+                "waiting_pending_tasks",
+                "unknown_action"
+            ]:
+                break
+
+        return {
+            "status": "cycle_finished",
+            "steps": len(history),
+            "history": history
+        }
+
+
