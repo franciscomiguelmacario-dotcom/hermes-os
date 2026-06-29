@@ -13,6 +13,7 @@ from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
 from app.core.learning_memory import LearningMemory
 from app.core.tasks.task_queue import TaskQueue
+from app.core.agents.analytics import AnalyticsAgent
 
 
 class Brain:
@@ -36,6 +37,7 @@ class Brain:
         self.register_agent("organic", OrganicTrafficAgent("organic", memory, logger, bus, self, priority=6), persist=False)
         self.register_agent("design", DesignAgent("design", memory, logger, bus, self, priority=6), persist=False)
         self.register_agent("store_ops", StoreOpsAgent("store_ops", memory, logger, bus, self, priority=6), persist=False)
+        self.register_agent("analytics", AnalyticsAgent("analytics", memory, logger, bus, self, priority=6), persist=False)
         self.register_agent("executor", ExecutorAgent("executor", memory, logger, bus, self, priority=5), persist=False)
 
         self.load_persisted_agents()
