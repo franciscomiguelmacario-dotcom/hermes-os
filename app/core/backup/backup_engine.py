@@ -14,10 +14,8 @@ class BackupEngine:
         filename = f"hermes_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         filepath = os.path.join(self.path, filename)
 
-        data = self.memory.dump()
-
         with open(filepath, "w") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+            json.dump(self.memory.dump(), f, indent=4, ensure_ascii=False)
 
         return {
             "status": "backup_created",
@@ -30,4 +28,25 @@ class BackupEngine:
         return {
             "status": "ok",
             "backups": files
+        }
+
+    def restore_backup(self, filename):
+        safe_name = os.path.basename(filename)
+        filepath = os.path.join(self.path, safe_name)
+
+        if not os.path.exists(filepath):
+            return {
+                "status": "error",
+                "message": f"backup not found: {safe_name}"
+            }
+
+        with open(filepath, "r") as f:
+            data = json.load(f)
+
+        self.memory.data = data
+        self.memory._save()
+
+        return {
+            "status": "backup_restored",
+            "file": filepath
         }

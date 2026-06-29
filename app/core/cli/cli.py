@@ -45,6 +45,7 @@ class CLI:
                         "exit"
                         "backup",
                         "backups",
+                        "restore-backup <filename>",
                     ]
                 })
                 continue
@@ -68,6 +69,11 @@ class CLI:
 
             if cmd == "backups":
                 self.logger.info(self.brain.list_backups())
+                continue
+
+            if cmd.startswith("restore-backup "):
+                filename = cmd.replace("restore-backup ", "", 1).strip()
+                self.logger.info(self.brain.restore_backup(filename))
                 continue
 
             if cmd == "memory":

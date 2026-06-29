@@ -151,6 +151,9 @@ class Brain:
     def list_backups(self):
         return self.backup.list_backups()
 
+    def restore_backup(self, filename):
+        return self.backup.restore_backup(filename)
+
     def tick(self):
         self.scheduler.run(self.agents)
 
