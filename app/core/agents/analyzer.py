@@ -3,8 +3,9 @@ from app.core.agents.base_agent import BaseAgent
 
 class AnalyzerAgent(BaseAgent):
 
-    def __init__(self, name, memory, logger, bus, brain=None):
-        super().__init__(name, memory, logger, bus, brain)
+    def __init__(self, name, memory, logger, bus, brain=None, priority=1):
+        super().__init__(name, memory, logger, bus, brain, priority)
+
         self.bus.subscribe("input.received", self.on_input)
 
     def on_input(self, data):

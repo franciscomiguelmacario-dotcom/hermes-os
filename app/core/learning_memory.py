@@ -14,6 +14,11 @@ class LearningMemory:
 
         self.memory.set("learning_log", logs)
 
-    def get_history(self, agent):
-        logs = self.memory.get("learning_log", [])
-        return [l for l in logs if l["agent"] == agent]
+    def all(self):
+        return self.memory.get("learning_log", [])
+
+    def history(self, agent):
+        return [
+            item for item in self.all()
+            if item.get("agent") == agent
+        ]

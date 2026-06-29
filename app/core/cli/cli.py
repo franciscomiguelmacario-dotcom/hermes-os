@@ -5,19 +5,37 @@ class CLI:
         self.logger = logger
 
     def run(self):
-
         self.logger.info("CLI started")
 
         while True:
             cmd = input("> ").strip()
 
             if cmd == "exit":
-                break
+                self.logger.info("CLI stopped")
+                return
 
             if cmd == "status":
                 self.logger.info({
-                    "agents": list(self.brain.agents.keys())
+                    "agents": {
+                        name: getattr(agent, "priority", 1)
+                        for name, agent in self.brain.agents.items()
+                    }
                 })
+                continue
+
+            if cmd == "learn":
+                self.logger.info(self.brain.learning.all())
+                continue
+
+            if cmd.startswith("history "):
+                _, agent = cmd.split(" ", 1)
+                self.logger.info(self.brain.learning.history(agent))
+                continue
+
+            if cmd.startswith("priority "):
+                _, name, value = cmd.split(" ", 2)
+                ok = self.brain.set_priority(name, value)
+                self.logger.info("priority updated" if ok else "agent not found")
                 continue
 
             if cmd.startswith("run "):
