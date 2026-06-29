@@ -1,0 +1,20 @@
+system:
+  name: Hermes
+
+version: 0.1.0
+
+database:
+  path: data/hermes.db
+
+logging:
+  level: INFO
+
+plugins:
+  auto_load: true
+
+voice:
+  enabled: false
+
+dashboard:
+  enabled: false
+

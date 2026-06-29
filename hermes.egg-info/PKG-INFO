@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: hermes
+Version: 0.1.0
+Summary: Hermes OS
+Requires-Python: >=3.10
+Requires-Dist: rich
+Requires-Dist: typer
+Requires-Dist: pydantic
+Requires-Dist: python-dotenv
+Requires-Dist: PyYAML
+Requires-Dist: psutil
+Requires-Dist: watchdog
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: requests

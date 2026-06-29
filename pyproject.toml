@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes"
+version = "0.1.0"
+description = "Hermes OS"
+requires-python = ">=3.10"
+
+dependencies = [
+    "rich",
+    "typer",
+    "pydantic",
+    "python-dotenv",
+    "PyYAML",
+    "psutil",
+    "watchdog",
+    "fastapi",
+    "uvicorn",
+    "requests"
+]
+
+[project.scripts]
+hermes = "app.cli.cli:app"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["app*"]

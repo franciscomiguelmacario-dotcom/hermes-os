@@ -1,0 +1,10 @@
+rich
+typer
+pydantic
+python-dotenv
+PyYAML
+psutil
+watchdog
+fastapi
+uvicorn
+requests

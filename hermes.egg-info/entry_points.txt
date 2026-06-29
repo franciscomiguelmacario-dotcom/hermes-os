@@ -1,0 +1,2 @@
+[console_scripts]
+hermes = app.cli.cli:app
