@@ -33,3 +33,7 @@ class TaskQueue:
                 task["result"] = result
 
         self.memory.set("tasks", tasks)
+
+    def clear(self):
+        self.memory.set("tasks", [])
+        return {"status": "tasks_cleared"}

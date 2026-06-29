@@ -107,6 +107,9 @@ class Brain:
     def set_obsidian_path(self, path):
         return self.reports.set_obsidian_path(path)
 
+    def clear_tasks(self):
+        return self.tasks.clear()
+
     def tick(self):
         self.scheduler.run(self.agents)
 

@@ -14,6 +14,35 @@ class CLI:
                 self.logger.info("CLI stopped")
                 return
 
+            if cmd == "help":
+                self.logger.info({
+                    "commands": [
+                        "help",
+                        "status",
+                        "tasks",
+                        "clear-tasks",
+                        "task <texto>",
+                        "workflows",
+                        "workflow dropshipping",
+                        "report",
+                        "export-report",
+                        "export-report-md",
+                        "export-obsidian",
+                        "set-obsidian-path <path>",
+                        "learn",
+                        "patterns",
+                        "history <agent>",
+                        "priority <agent> <number>",
+                        "run <texto>",
+                        "exit"
+                    ]
+                })
+                continue
+
+            if cmd == "clear-tasks":
+                self.logger.info(self.brain.clear_tasks())
+                continue
+
             if cmd == "status":
                 self.logger.info({
                     "agents": {
