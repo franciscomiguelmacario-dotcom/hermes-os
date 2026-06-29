@@ -1,3 +1,4 @@
+from app.core.cycles.business_cycle import BusinessCycle
 from app.core.snapshot.snapshot_engine import SnapshotEngine
 from app.core.backup.backup_engine import BackupEngine
 from app.core.agents.base_agent import BaseAgent
@@ -52,6 +53,8 @@ class Brain:
         self.backup = BackupEngine(memory)
 
         self.snapshot = SnapshotEngine(self)
+
+        self.business_cycle = BusinessCycle(self, logger)
 
         self.logger.info("Brain loaded")
 
@@ -165,6 +168,9 @@ class Brain:
 
     def restore_snapshot(self, filename):
         return self.snapshot.restore_snapshot(filename)
+
+    def run_business_cycle(self, wait_seconds=8):
+        return self.business_cycle.run_dropshipping_cycle(wait_seconds)
 
     def tick(self):
         self.scheduler.run(self.agents)

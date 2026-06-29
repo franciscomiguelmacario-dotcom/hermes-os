@@ -47,6 +47,7 @@ class CLI:
                         "backup",
                         "backups",
                         "snapshot",
+                        "business-cycle",
                         "snapshots",
                         "restore-backup <filename>",
                         "restore-snapshot <filename>", 
@@ -129,6 +130,10 @@ class CLI:
                 title = cmd[5:]
                 task = self.brain.create_task(title)
                 self.logger.info(task)
+                continue
+
+            if cmd == "business-cycle":
+                self.logger.info(self.brain.run_business_cycle())
                 continue
 
             if cmd == "workflows":
