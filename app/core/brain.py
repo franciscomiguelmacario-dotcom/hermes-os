@@ -1,26 +1,41 @@
-from app.core.router import Router
-from app.core.logger import Logger
+from app.core.agents.analyzer import AnalyzerAgent
+from app.core.plugins.plugin_loader import PluginLoader
 
 
 class Brain:
 
-    def __init__(self):
+    def __init__(self, logger=None, memory=None, bus=None):
+        self.logger = logger
+        self.memory = memory
+        self.bus = bus
+        self.agents = {}
 
-        self.logger = Logger()
+        self.register_agent(
+            "analyzer",
+            AnalyzerAgent("analyzer", memory, logger, bus, self)
+        )
 
-        self.router = Router()
+        self.plugins = PluginLoader(logger)
+        self.plugins.load(self, bus, memory)
 
-        self.router.register("status", self.status)
-        self.router.register("hello", self.hello)
+        self.logger.info("Brain loaded")
 
-    def status(self):
+    def initialize(self):
+        self.logger.info("Brain initialized")
 
-        self.logger.success("Hermes operacional.")
+    def register_agent(self, name, agent):
+        self.agents[name] = agent
+        self.logger.info(f"Agent registered: {name}")
 
-    def hello(self):
+    def tick(self):
+        for agent in self.agents.values():
+            if hasattr(agent, "tick"):
+                agent.tick()
 
-        self.logger.info("Olá, eu sou o Hermes.")
+    def process(self, input_data):
+        self.memory.set("last_input", input_data)
 
-    def execute(self, command):
+        if self.bus:
+            self.bus.emit("input.received", input_data)
 
-        self.router.execute(command)
+        return f"processed: {input_data}"

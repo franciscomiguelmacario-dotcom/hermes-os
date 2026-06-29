@@ -2,12 +2,8 @@ from app.core.startup import Hermes
 
 
 def main():
-
-    hermes = Hermes()
-
-    hermes.start()
-
-    hermes.brain.execute("status")
+    app = Hermes()
+    app.start()
 
 
 if __name__ == "__main__":

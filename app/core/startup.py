@@ -1,11 +1,10 @@
 from app.core.logger import Logger
-from app.core.config import Config
-from app.core.database import Database
-from app.core.events import EventBus
-from app.core.scheduler import Scheduler
-from app.plugins.registry import PluginRegistry
-from app.core.memory import Memory
+from app.core.memory import PersistentMemory
+from app.core.bus.event_bus import EventBus
 from app.core.brain import Brain
+from app.core.kernel.kernel import Kernel
+from app.core.runtime.runtime import Runtime
+from app.core.cli.cli import CLI
 
 
 class Hermes:
@@ -13,23 +12,18 @@ class Hermes:
     def __init__(self):
 
         self.logger = Logger()
-        self.config = Config()
-        self.database = Database()
-        self.events = EventBus()
-        self.scheduler = Scheduler()
-        self.memory = Memory()
-        self.plugins = PluginManager()
-        self.brain = Brain()
+        self.memory = PersistentMemory()
+        self.bus = EventBus()
+
+        self.brain = Brain(self.logger, self.memory, self.bus)
+        self.kernel = Kernel(self.brain, self.logger)
+
+        self.cli = CLI(self.brain, self.logger)
+        self.runtime = Runtime(self.kernel, self.logger, self.cli)
 
     def start(self):
+        self.runtime.start()
 
-        self.logger.info("A iniciar Hermes...")
 
-        self.database.initialize()
-
-        self.scheduler.start()
-
-        self.plugins.load()
-        self.plugins.start()
-
-        self.logger.success("Hermes iniciado")
+if __name__ == "__main__":
+    Hermes().start()
