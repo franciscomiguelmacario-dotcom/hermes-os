@@ -1,8 +1,10 @@
 from app.core.agents.analyzer import AnalyzerAgent
+from app.core.agents.executor import ExecutorAgent
 from app.core.agents.base_agent import BaseAgent
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
 from app.core.learning_memory import LearningMemory
+from app.core.tasks.task_queue import TaskQueue
 
 
 class Brain:
@@ -12,12 +14,20 @@ class Brain:
         self.memory = memory
         self.bus = bus
         self.agents = {}
+
         self.scheduler = AgentScheduler(logger)
         self.learning = LearningMemory(memory)
+        self.tasks = TaskQueue(memory)
 
         self.register_agent(
             "analyzer",
             AnalyzerAgent("analyzer", memory, logger, bus, self, priority=10),
+            persist=False
+        )
+
+        self.register_agent(
+            "executor",
+            ExecutorAgent("executor", memory, logger, bus, self, priority=5),
             persist=False
         )
 
@@ -36,7 +46,7 @@ class Brain:
         self.agents[name] = agent
         self.logger.info(f"Agent registered: {name}")
 
-        if persist and name != "analyzer":
+        if persist and name not in ["analyzer", "executor"]:
             saved = self.memory.get("agents", {})
             saved[name] = {
                 "priority": getattr(agent, "priority", 1)
@@ -74,6 +84,14 @@ class Brain:
             self.memory.set("agents", saved)
 
         return True
+
+    def create_task(self, title):
+        task = self.tasks.add(title)
+
+        if self.bus:
+            self.bus.emit("task.created", task)
+
+        return task
 
     def tick(self):
         self.scheduler.run(self.agents)

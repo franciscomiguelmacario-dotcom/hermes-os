@@ -23,6 +23,16 @@ class CLI:
                 })
                 continue
 
+            if cmd == "tasks":
+                self.logger.info(self.brain.tasks.all())
+                continue
+
+            if cmd.startswith("task "):
+                title = cmd[5:]
+                task = self.brain.create_task(title)
+                self.logger.info(task)
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue
