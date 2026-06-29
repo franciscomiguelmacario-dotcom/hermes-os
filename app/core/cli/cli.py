@@ -72,6 +72,10 @@ class CLI:
                 self.logger.info(result)
                 continue
 
+            if cmd == "next-action":
+                self.logger.info(self.brain.next_action())
+                continue
+
             if cmd == "report":
                 self.logger.info(self.brain.report())
                 continue
