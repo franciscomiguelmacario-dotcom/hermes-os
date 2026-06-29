@@ -5,6 +5,7 @@ from app.core.runtime.agent_scheduler import AgentScheduler
 from app.core.learning_memory import LearningMemory
 from app.core.tasks.task_queue import TaskQueue
 from app.core.workflows.workflow_engine import WorkflowEngine
+from app.core.reports.report_engine import ReportEngine
 
 
 class Brain:
@@ -19,7 +20,7 @@ class Brain:
         self.learning = LearningMemory(memory)
         self.tasks = TaskQueue(memory)
         self.workflows = WorkflowEngine(self.tasks, logger)
-
+        self.reports = ReportEngine(memory, self.tasks)
         self.agent_loader = AgentLoader(logger)
         auto_agents = self.agent_loader.load(self, memory, bus)
 
@@ -89,6 +90,9 @@ class Brain:
 
     def run_workflow(self, name):
         return self.workflows.run(name)
+   
+    def report(self):
+        return self.reports.business_report()
 
     def tick(self):
         self.scheduler.run(self.agents)

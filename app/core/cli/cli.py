@@ -43,6 +43,10 @@ class CLI:
                 self.logger.info(result)
                 continue
 
+            if cmd == "report":
+                self.logger.info(self.brain.report())
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue
