@@ -93,6 +93,21 @@ class CLI:
                 self.logger.info(self.brain.set_obsidian_path(path))
                 continue
 
+            if cmd == "business":
+                self.logger.info(self.brain.business_profile())
+                continue
+
+            if cmd.startswith("set-business "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-business <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_business_value(key, value))
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue

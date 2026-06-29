@@ -1,3 +1,4 @@
+from app.core.business.business_profile import BusinessProfile
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -21,7 +22,7 @@ class Brain:
         self.tasks = TaskQueue(memory)
         self.workflows = WorkflowEngine(self.tasks, logger)
         self.reports = ReportEngine(memory, self.tasks)
-
+        self.business = BusinessProfile(memory)
         self.agent_loader = AgentLoader(logger)
         auto_agents = self.agent_loader.load(self, memory, bus)
 
@@ -109,6 +110,12 @@ class Brain:
 
     def clear_tasks(self):
         return self.tasks.clear()
+
+    def business_profile(self):
+        return self.business.get()
+
+    def set_business_value(self, key, value):
+        return self.business.set_value(key, value)
 
     def tick(self):
         self.scheduler.run(self.agents)
