@@ -100,6 +100,9 @@ class Brain:
     def tick(self):
         self.scheduler.run(self.agents)
 
+    def export_markdown_report(self):
+        return self.reports.export_markdown_report()
+
     def process(self, input_data):
         self.memory.set("last_input", input_data)
 

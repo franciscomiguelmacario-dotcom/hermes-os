@@ -9,7 +9,6 @@ class ReportEngine:
         self.memory = memory
         self.tasks = tasks
         self.path = "data/reports"
-
         os.makedirs(self.path, exist_ok=True)
 
     def business_report(self):
@@ -40,7 +39,62 @@ class ReportEngine:
         with open(filepath, "w") as f:
             json.dump(report, f, indent=4, ensure_ascii=False)
 
-        return {
-            "status": "exported",
-            "file": filepath
-        }
+        return {"status": "exported", "file": filepath}
+
+    def export_markdown_report(self):
+        report = self.business_report()
+
+        filename = f"business_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        filepath = os.path.join(self.path, filename)
+
+        content = f"""# Hermes Business Report
+
+Created: {report["created_at"]}
+
+## Tasks
+
+- Total: {report["tasks_total"]}
+- Done: {report["tasks_done"]}
+- Pending: {report["tasks_pending"]}
+
+## Product Research
+
+{report["product_research"]}
+
+## Supplier
+
+{report["supplier"]}
+
+## Marketing
+
+{report["marketing"]}
+
+## Organic Traffic
+
+{report["organic"]}
+
+## Design
+
+{report["design"]}
+
+## Store Operations
+
+{report["store_ops"]}
+
+## Fulfillment
+
+{report["fulfillment"]}
+
+## Support
+
+{report["support"]}
+
+## Analytics
+
+{report["analytics"]}
+"""
+
+        with open(filepath, "w") as f:
+            f.write(content)
+
+        return {"status": "exported", "file": filepath}
