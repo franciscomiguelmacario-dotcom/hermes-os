@@ -23,6 +23,7 @@ class CLI:
                         "memory-key <key>",
                         "business",
                         "set-business <key> <value>",
+                        "health",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
@@ -44,6 +45,10 @@ class CLI:
                         "exit"
                     ]
                 })
+                continue
+
+            if cmd == "health":
+                self.logger.info(self.brain.health_check())
                 continue
 
             if cmd == "status":

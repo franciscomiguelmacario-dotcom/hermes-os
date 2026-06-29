@@ -1,6 +1,3 @@
-from app.core.autopilot.autopilot_engine import AutopilotEngine
-from app.core.decision.decision_engine import DecisionEngine
-from app.core.business.business_profile import BusinessProfile
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -9,6 +6,10 @@ from app.core.learning_memory import LearningMemory
 from app.core.tasks.task_queue import TaskQueue
 from app.core.workflows.workflow_engine import WorkflowEngine
 from app.core.reports.report_engine import ReportEngine
+from app.core.business.business_profile import BusinessProfile
+from app.core.decision.decision_engine import DecisionEngine
+from app.core.autopilot.autopilot_engine import AutopilotEngine
+from app.core.health.health_check import HealthCheck
 
 
 class Brain:
@@ -27,11 +28,12 @@ class Brain:
         self.business = BusinessProfile(memory)
         self.decisions = DecisionEngine(memory, self.tasks)
         self.autopilot = AutopilotEngine(
-        self.decisions,
-        self.tasks,
-        self.workflows,
-        logger
-)
+            self.decisions,
+            self.tasks,
+            self.workflows,
+            logger
+        )
+
         self.agent_loader = AgentLoader(logger)
         auto_agents = self.agent_loader.load(self, memory, bus)
 
@@ -42,6 +44,8 @@ class Brain:
 
         self.plugins = PluginLoader(logger)
         self.plugins.load(self, bus, memory)
+
+        self.health = HealthCheck(self)
 
         self.logger.info("Brain loaded")
 
@@ -99,6 +103,9 @@ class Brain:
 
         return task
 
+    def clear_tasks(self):
+        return self.tasks.clear()
+
     def run_workflow(self, name):
         return self.workflows.run(name)
 
@@ -117,9 +124,6 @@ class Brain:
     def set_obsidian_path(self, path):
         return self.reports.set_obsidian_path(path)
 
-    def clear_tasks(self):
-        return self.tasks.clear()
-
     def business_profile(self):
         return self.business.get()
 
@@ -134,6 +138,9 @@ class Brain:
 
     def autopilot_cycle(self, max_steps=5):
         return self.autopilot.run_cycle(max_steps)
+
+    def health_check(self):
+        return self.health.run()
 
     def tick(self):
         self.scheduler.run(self.agents)
