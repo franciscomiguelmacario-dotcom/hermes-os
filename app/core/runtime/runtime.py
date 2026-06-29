@@ -1,3 +1,4 @@
+import threading
 import time
 
 
@@ -10,8 +11,10 @@ class Runtime:
         self.running = True
 
     def start(self):
-
         self.kernel.boot()
+
+        worker = threading.Thread(target=self.loop, daemon=True)
+        worker.start()
 
         try:
             self.cli.run()
@@ -19,10 +22,9 @@ class Runtime:
             self.logger.info("CLI interrupted")
 
         self.running = False
-
         self.logger.info("Shutting down runtime...")
 
-        # loop só roda se estiver ativo
+    def loop(self):
         while self.running:
             self.kernel.run_tick()
             time.sleep(1)
