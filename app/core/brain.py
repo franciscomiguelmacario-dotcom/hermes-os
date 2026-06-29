@@ -1,11 +1,12 @@
 from app.core.agents.analyzer import AnalyzerAgent
 from app.core.agents.executor import ExecutorAgent
 from app.core.agents.product_research import ProductResearchAgent
+from app.core.agents.supplier import SupplierAgent
 from app.core.agents.marketing import MarketingAgent
 from app.core.agents.organic import OrganicTrafficAgent
 from app.core.agents.design import DesignAgent
 from app.core.agents.store_ops import StoreOpsAgent
-from app.core.agents.supplier import SupplierAgent
+from app.core.agents.fulfillment import FulfillmentAgent
 from app.core.agents.base_agent import BaseAgent
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
@@ -28,6 +29,7 @@ class Brain:
         self.register_agent("analyzer", AnalyzerAgent("analyzer", memory, logger, bus, self, priority=10), persist=False)
         self.register_agent("product_research", ProductResearchAgent("product_research", memory, logger, bus, self, priority=8), persist=False)
         self.register_agent("supplier", SupplierAgent("supplier", memory, logger, bus, self, priority=7), persist=False)
+        self.register_agent("fulfillment", FulfillmentAgent("fulfillment", memory, logger, bus, self, priority=7), persist=False)
         self.register_agent("marketing", MarketingAgent("marketing", memory, logger, bus, self, priority=7), persist=False)
         self.register_agent("organic", OrganicTrafficAgent("organic", memory, logger, bus, self, priority=6), persist=False)
         self.register_agent("design", DesignAgent("design", memory, logger, bus, self, priority=6), persist=False)
@@ -54,6 +56,7 @@ class Brain:
             "executor",
             "product_research",
             "supplier",
+            "fulfillment",
             "marketing",
             "organic",
             "design",
