@@ -5,9 +5,7 @@ class WorkflowEngine:
         self.logger = logger
 
     def list(self):
-        return [
-            "dropshipping"
-        ]
+        return ["dropshipping"]
 
     def run(self, name):
         name = name.lower().strip()
@@ -22,6 +20,7 @@ class WorkflowEngine:
 
     def _dropshipping_workflow(self):
         tasks = [
+            "criar estrategia para o negocio",
             "pesquisar produto vencedor",
             "encontrar fornecedor com envio rapido",
             "melhorar design da loja para vender mais",

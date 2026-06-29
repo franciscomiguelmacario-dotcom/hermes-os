@@ -33,9 +33,11 @@ class ReportEngine:
 
         return {
             "created_at": datetime.now().isoformat(),
+            "business_profile": self.memory.get("business_profile"),
             "tasks_total": len(all_tasks),
             "tasks_done": len([t for t in all_tasks if t["status"] == "done"]),
             "tasks_pending": len([t for t in all_tasks if t["status"] == "pending"]),
+            "strategy": self.memory.get("last_strategy_plan"),
             "product_research": self.memory.get("last_product_research"),
             "supplier": self.memory.get("last_supplier_plan"),
             "marketing": self.memory.get("last_marketing_plan"),
@@ -54,11 +56,19 @@ class ReportEngine:
 
 Created: {report["created_at"]}
 
+## Business Profile
+
+{report["business_profile"]}
+
 ## Tasks
 
 - Total: {report["tasks_total"]}
 - Done: {report["tasks_done"]}
 - Pending: {report["tasks_pending"]}
+
+## Strategy
+
+{report["strategy"]}
 
 ## Product Research
 
