@@ -97,6 +97,9 @@ class Brain:
     def export_report(self):
         return self.reports.export_business_report()
 
+    def export_obsidian_report(self):
+        return self.reports.export_obsidian_report()
+
     def tick(self):
         self.scheduler.run(self.agents)
 

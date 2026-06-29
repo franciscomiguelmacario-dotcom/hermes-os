@@ -9,7 +9,10 @@ class ReportEngine:
         self.memory = memory
         self.tasks = tasks
         self.path = "data/reports"
+        self.obsidian_path = os.getenv("HERMES_OBSIDIAN_PATH", "data/obsidian/Hermes")
+
         os.makedirs(self.path, exist_ok=True)
+        os.makedirs(self.obsidian_path, exist_ok=True)
 
     def business_report(self):
         all_tasks = self.tasks.all()
@@ -30,24 +33,10 @@ class ReportEngine:
             "analytics": self.memory.get("last_analytics_plan")
         }
 
-    def export_business_report(self):
+    def markdown_content(self):
         report = self.business_report()
 
-        filename = f"business_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        filepath = os.path.join(self.path, filename)
-
-        with open(filepath, "w") as f:
-            json.dump(report, f, indent=4, ensure_ascii=False)
-
-        return {"status": "exported", "file": filepath}
-
-    def export_markdown_report(self):
-        report = self.business_report()
-
-        filename = f"business_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        filepath = os.path.join(self.path, filename)
-
-        content = f"""# Hermes Business Report
+        return f"""# Hermes Business Report
 
 Created: {report["created_at"]}
 
@@ -94,7 +83,31 @@ Created: {report["created_at"]}
 {report["analytics"]}
 """
 
+    def export_business_report(self):
+        report = self.business_report()
+
+        filename = f"business_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filepath = os.path.join(self.path, filename)
+
         with open(filepath, "w") as f:
-            f.write(content)
+            json.dump(report, f, indent=4, ensure_ascii=False)
 
         return {"status": "exported", "file": filepath}
+
+    def export_markdown_report(self):
+        filename = f"business_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        filepath = os.path.join(self.path, filename)
+
+        with open(filepath, "w") as f:
+            f.write(self.markdown_content())
+
+        return {"status": "exported", "file": filepath}
+
+    def export_obsidian_report(self):
+        filename = f"Hermes Business Report {datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.md"
+        filepath = os.path.join(self.obsidian_path, filename)
+
+        with open(filepath, "w") as f:
+            f.write(self.markdown_content())
+
+        return {"status": "exported_to_obsidian", "file": filepath}

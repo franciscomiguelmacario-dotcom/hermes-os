@@ -55,6 +55,10 @@ class CLI:
                 self.logger.info(self.brain.export_markdown_report())
                 continue
 
+            if cmd == "export-obsidian":
+                self.logger.info(self.brain.export_obsidian_report())
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue
