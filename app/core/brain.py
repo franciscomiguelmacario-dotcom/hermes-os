@@ -1,19 +1,9 @@
-from app.core.agents.analyzer import AnalyzerAgent
-from app.core.agents.executor import ExecutorAgent
-from app.core.agents.product_research import ProductResearchAgent
-from app.core.agents.supplier import SupplierAgent
-from app.core.agents.fulfillment import FulfillmentAgent
-from app.core.agents.marketing import MarketingAgent
-from app.core.agents.organic import OrganicTrafficAgent
-from app.core.agents.design import DesignAgent
-from app.core.agents.store_ops import StoreOpsAgent
-from app.core.agents.support import SupportAgent
 from app.core.agents.base_agent import BaseAgent
+from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
 from app.core.learning_memory import LearningMemory
 from app.core.tasks.task_queue import TaskQueue
-from app.core.agents.analytics import AnalyticsAgent
 
 
 class Brain:
@@ -28,17 +18,11 @@ class Brain:
         self.learning = LearningMemory(memory)
         self.tasks = TaskQueue(memory)
 
-        self.register_agent("analyzer", AnalyzerAgent("analyzer", memory, logger, bus, self, priority=10), persist=False)
-        self.register_agent("product_research", ProductResearchAgent("product_research", memory, logger, bus, self, priority=8), persist=False)
-        self.register_agent("supplier", SupplierAgent("supplier", memory, logger, bus, self, priority=7), persist=False)
-        self.register_agent("fulfillment", FulfillmentAgent("fulfillment", memory, logger, bus, self, priority=7), persist=False)
-        self.register_agent("support", SupportAgent("support", memory, logger, bus, self, priority=7), persist=False)
-        self.register_agent("marketing", MarketingAgent("marketing", memory, logger, bus, self, priority=7), persist=False)
-        self.register_agent("organic", OrganicTrafficAgent("organic", memory, logger, bus, self, priority=6), persist=False)
-        self.register_agent("design", DesignAgent("design", memory, logger, bus, self, priority=6), persist=False)
-        self.register_agent("store_ops", StoreOpsAgent("store_ops", memory, logger, bus, self, priority=6), persist=False)
-        self.register_agent("analytics", AnalyticsAgent("analytics", memory, logger, bus, self, priority=6), persist=False)
-        self.register_agent("executor", ExecutorAgent("executor", memory, logger, bus, self, priority=5), persist=False)
+        self.agent_loader = AgentLoader(logger)
+        auto_agents = self.agent_loader.load(self, memory, bus)
+
+        for name, agent in auto_agents.items():
+            self.register_agent(name, agent, persist=False)
 
         self.load_persisted_agents()
 
@@ -55,20 +39,7 @@ class Brain:
         self.agents[name] = agent
         self.logger.info(f"Agent registered: {name}")
 
-        core_agents = [
-            "analyzer",
-            "executor",
-            "product_research",
-            "supplier",
-            "fulfillment",
-            "support",
-            "marketing",
-            "organic",
-            "design",
-            "store_ops"
-        ]
-
-        if persist and name not in core_agents:
+        if persist:
             saved = self.memory.get("agents", {})
             saved[name] = {"priority": getattr(agent, "priority", 1)}
             self.memory.set("agents", saved)
@@ -89,6 +60,7 @@ class Brain:
                     self,
                     priority=meta.get("priority", 1)
                 )
+
                 self.agents[name] = agent
                 self.logger.info(f"Persisted agent loaded: {name}")
 
