@@ -1,5 +1,5 @@
-from core.logger import Logger
-from core.plugin_manager import PluginManager
+from app.core.logger import Logger
+from app.core.plugin_manager import PluginManager
 
 def main():
     logger = Logger()
