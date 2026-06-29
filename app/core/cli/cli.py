@@ -27,6 +27,10 @@ class CLI:
                 self.logger.info(self.brain.learning.all())
                 continue
 
+            if cmd == "patterns":
+                self.logger.info(self.brain.memory.get("input_patterns", {}))
+                continue
+
             if cmd.startswith("history "):
                 _, agent = cmd.split(" ", 1)
                 self.logger.info(self.brain.learning.history(agent))
