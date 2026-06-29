@@ -43,6 +43,8 @@ class CLI:
                         "priority <agent> <number>",
                         "run <texto>",
                         "exit"
+                        "backup",
+                        "backups",
                     ]
                 })
                 continue
@@ -58,6 +60,14 @@ class CLI:
                         for name, agent in self.brain.agents.items()
                     }
                 })
+                continue
+
+            if cmd == "backup":
+                self.logger.info(self.brain.create_backup())
+                continue
+
+            if cmd == "backups":
+                self.logger.info(self.brain.list_backups())
                 continue
 
             if cmd == "memory":

@@ -1,3 +1,4 @@
+from app.core.backup.backup_engine import BackupEngine
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -46,6 +47,8 @@ class Brain:
         self.plugins.load(self, bus, memory)
 
         self.health = HealthCheck(self)
+
+        self.backup = BackupEngine(memory)
 
         self.logger.info("Brain loaded")
 
@@ -141,6 +144,12 @@ class Brain:
 
     def health_check(self):
         return self.health.run()
+
+    def create_backup(self):
+        return self.backup.create_backup()
+
+    def list_backups(self):
+        return self.backup.list_backups()
 
     def tick(self):
         self.scheduler.run(self.agents)
