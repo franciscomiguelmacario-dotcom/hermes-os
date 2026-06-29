@@ -1,3 +1,4 @@
+from app.core.snapshot.snapshot_engine import SnapshotEngine
 from app.core.backup.backup_engine import BackupEngine
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
@@ -49,6 +50,8 @@ class Brain:
         self.health = HealthCheck(self)
 
         self.backup = BackupEngine(memory)
+
+        self.snapshot = SnapshotEngine(self)
 
         self.logger.info("Brain loaded")
 
@@ -153,6 +156,12 @@ class Brain:
 
     def restore_backup(self, filename):
         return self.backup.restore_backup(filename)
+
+    def create_snapshot(self):
+        return self.snapshot.create_snapshot()
+
+    def list_snapshots(self):
+        return self.snapshot.list_snapshots()
 
     def tick(self):
         self.scheduler.run(self.agents)

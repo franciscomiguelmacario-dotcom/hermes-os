@@ -45,8 +45,10 @@ class CLI:
                         "exit"
                         "backup",
                         "backups",
+                        "snapshot",
+                        "snapshots",
                         "restore-backup <filename>",
-                    ]
+                     ]
                 })
                 continue
 
@@ -69,6 +71,14 @@ class CLI:
 
             if cmd == "backups":
                 self.logger.info(self.brain.list_backups())
+                continue
+
+            if cmd == "snapshot":
+                self.logger.info(self.brain.create_snapshot())
+                continue
+
+            if cmd == "snapshots":
+                self.logger.info(self.brain.list_snapshots())
                 continue
 
             if cmd.startswith("restore-backup "):
