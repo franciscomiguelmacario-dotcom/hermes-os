@@ -33,6 +33,16 @@ class CLI:
                 self.logger.info(task)
                 continue
 
+            if cmd == "workflows":
+                self.logger.info(self.brain.workflows.list())
+                continue
+
+            if cmd.startswith("workflow "):
+                name = cmd[9:]
+                result = self.brain.run_workflow(name)
+                self.logger.info(result)
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue
