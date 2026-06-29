@@ -90,9 +90,12 @@ class Brain:
 
     def run_workflow(self, name):
         return self.workflows.run(name)
-   
+
     def report(self):
         return self.reports.business_report()
+
+    def export_report(self):
+        return self.reports.export_business_report()
 
     def tick(self):
         self.scheduler.run(self.agents)

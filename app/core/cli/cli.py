@@ -47,6 +47,10 @@ class CLI:
                 self.logger.info(self.brain.report())
                 continue
 
+            if cmd == "export-report":
+                self.logger.info(self.brain.export_report())
+                continue
+
             if cmd == "learn":
                 self.logger.info(self.brain.learning.all())
                 continue
