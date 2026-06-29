@@ -19,11 +19,18 @@ class CLI:
                     "commands": [
                         "help",
                         "status",
+                        "memory",
+                        "memory-key <key>",
+                        "business",
+                        "set-business <key> <value>",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
                         "workflows",
                         "workflow dropshipping",
+                        "next-action",
+                        "autopilot",
+                        "autopilot-cycle <steps>",
                         "report",
                         "export-report",
                         "export-report-md",
@@ -35,24 +42,8 @@ class CLI:
                         "priority <agent> <number>",
                         "run <texto>",
                         "exit"
-                        "autopilot",
-                        "autopilot-cycle <steps>",
-                 ]
+                    ]
                 })
-                continue
-
-            if cmd.startswith("autopilot-cycle"):
-                parts = cmd.split(" ")
-
-                max_steps = 5
-                if len(parts) == 2:
-                    max_steps = int(parts[1])
-
-                self.logger.info(self.brain.autopilot_cycle(max_steps))
-                continue
-
-            if cmd == "clear-tasks":
-                self.logger.info(self.brain.clear_tasks())
                 continue
 
             if cmd == "status":
@@ -64,8 +55,36 @@ class CLI:
                 })
                 continue
 
+            if cmd == "memory":
+                self.logger.info(self.brain.memory.dump())
+                continue
+
+            if cmd.startswith("memory-key "):
+                key = cmd.replace("memory-key ", "", 1).strip()
+                self.logger.info(self.brain.memory.get(key))
+                continue
+
+            if cmd == "business":
+                self.logger.info(self.brain.business_profile())
+                continue
+
+            if cmd.startswith("set-business "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-business <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_business_value(key, value))
+                continue
+
             if cmd == "tasks":
                 self.logger.info(self.brain.tasks.all())
+                continue
+
+            if cmd == "clear-tasks":
+                self.logger.info(self.brain.clear_tasks())
                 continue
 
             if cmd.startswith("task "):
@@ -84,12 +103,22 @@ class CLI:
                 self.logger.info(result)
                 continue
 
-            if cmd == "autopilot":
-                self.logger.info(self.brain.autopilot_once())
-
-
             if cmd == "next-action":
                 self.logger.info(self.brain.next_action())
+                continue
+
+            if cmd == "autopilot":
+                self.logger.info(self.brain.autopilot_once())
+                continue
+
+            if cmd.startswith("autopilot-cycle"):
+                parts = cmd.split(" ")
+
+                max_steps = 5
+                if len(parts) == 2:
+                    max_steps = int(parts[1])
+
+                self.logger.info(self.brain.autopilot_cycle(max_steps))
                 continue
 
             if cmd == "report":
@@ -111,21 +140,6 @@ class CLI:
             if cmd.startswith("set-obsidian-path "):
                 path = cmd.replace("set-obsidian-path ", "", 1).strip()
                 self.logger.info(self.brain.set_obsidian_path(path))
-                continue
-
-            if cmd == "business":
-                self.logger.info(self.brain.business_profile())
-                continue
-
-            if cmd.startswith("set-business "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-business <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_business_value(key, value))
                 continue
 
             if cmd == "learn":
