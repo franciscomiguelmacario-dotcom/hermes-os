@@ -2,6 +2,7 @@ from app.core.agents.analyzer import AnalyzerAgent
 from app.core.agents.executor import ExecutorAgent
 from app.core.agents.product_research import ProductResearchAgent
 from app.core.agents.marketing import MarketingAgent
+from app.core.agents.organic import OrganicTrafficAgent
 from app.core.agents.base_agent import BaseAgent
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
@@ -40,6 +41,12 @@ class Brain:
         )
 
         self.register_agent(
+            "organic",
+            OrganicTrafficAgent("organic", memory, logger, bus, self, priority=6),
+            persist=False
+        )
+
+        self.register_agent(
             "executor",
             ExecutorAgent("executor", memory, logger, bus, self, priority=5),
             persist=False
@@ -60,7 +67,7 @@ class Brain:
         self.agents[name] = agent
         self.logger.info(f"Agent registered: {name}")
 
-        core_agents = ["analyzer", "executor", "product_research", "marketing"]
+        core_agents = ["analyzer", "executor", "product_research", "marketing", "organic"]
 
         if persist and name not in core_agents:
             saved = self.memory.get("agents", {})
