@@ -9,7 +9,8 @@ class TaskQueue:
         task = {
             "id": len(tasks) + 1,
             "title": title,
-            "status": "pending"
+            "status": "pending",
+            "result": None
         }
 
         tasks.append(task)
@@ -23,11 +24,12 @@ class TaskQueue:
     def pending(self):
         return [t for t in self.all() if t["status"] == "pending"]
 
-    def complete(self, task_id):
+    def complete(self, task_id, result=None):
         tasks = self.all()
 
         for task in tasks:
             if task["id"] == task_id:
                 task["status"] = "done"
+                task["result"] = result
 
         self.memory.set("tasks", tasks)
