@@ -4,6 +4,7 @@ from app.core.agents.product_research import ProductResearchAgent
 from app.core.agents.marketing import MarketingAgent
 from app.core.agents.organic import OrganicTrafficAgent
 from app.core.agents.design import DesignAgent
+from app.core.agents.store_ops import StoreOpsAgent
 from app.core.agents.base_agent import BaseAgent
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
@@ -54,6 +55,12 @@ class Brain:
         )
 
         self.register_agent(
+            "store_ops",
+            StoreOpsAgent("store_ops", memory, logger, bus, self, priority=6),
+            persist=False
+        )
+
+        self.register_agent(
             "executor",
             ExecutorAgent("executor", memory, logger, bus, self, priority=5),
             persist=False
@@ -80,7 +87,8 @@ class Brain:
             "product_research",
             "marketing",
             "organic",
-            "design"
+            "design",
+            "store_ops"
         ]
 
         if persist and name not in core_agents:
