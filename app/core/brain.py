@@ -1,3 +1,4 @@
+from app.core.autopilot.autopilot_engine import AutopilotEngine
 from app.core.decision.decision_engine import DecisionEngine
 from app.core.business.business_profile import BusinessProfile
 from app.core.agents.base_agent import BaseAgent
@@ -25,6 +26,12 @@ class Brain:
         self.reports = ReportEngine(memory, self.tasks)
         self.business = BusinessProfile(memory)
         self.decisions = DecisionEngine(memory, self.tasks)
+        self.autopilot = AutopilotEngine(
+        self.decisions,
+        self.tasks,
+        self.workflows,
+        logger
+)
         self.agent_loader = AgentLoader(logger)
         auto_agents = self.agent_loader.load(self, memory, bus)
 
@@ -121,6 +128,9 @@ class Brain:
 
     def next_action(self):
         return self.decisions.next_action()
+
+    def autopilot_once(self):
+        return self.autopilot.run_once()
 
     def tick(self):
         self.scheduler.run(self.agents)

@@ -35,6 +35,7 @@ class CLI:
                         "priority <agent> <number>",
                         "run <texto>",
                         "exit"
+                        "autopilot",
                     ]
                 })
                 continue
@@ -71,6 +72,10 @@ class CLI:
                 result = self.brain.run_workflow(name)
                 self.logger.info(result)
                 continue
+
+            if cmd == "autopilot":
+                self.logger.info(self.brain.autopilot_once())
+
 
             if cmd == "next-action":
                 self.logger.info(self.brain.next_action())
