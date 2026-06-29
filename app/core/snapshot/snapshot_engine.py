@@ -37,3 +37,32 @@ class SnapshotEngine:
             "status": "ok",
             "snapshots": sorted(os.listdir(self.path))
         }
+
+    def restore_snapshot(self, filename):
+        safe_name = os.path.basename(filename)
+        filepath = os.path.join(self.path, safe_name)
+
+        if not os.path.exists(filepath):
+            return {
+                "status": "error",
+                "message": f"snapshot not found: {safe_name}"
+            }
+
+        with open(filepath, "r") as f:
+            snapshot = json.load(f)
+
+        memory = snapshot.get("memory")
+
+        if not isinstance(memory, dict):
+            return {
+                "status": "error",
+                "message": "invalid snapshot memory"
+            }
+
+        self.brain.memory.data = memory
+        self.brain.memory._save()
+
+        return {
+            "status": "snapshot_restored",
+            "file": filepath
+        }

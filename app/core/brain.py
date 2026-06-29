@@ -163,6 +163,9 @@ class Brain:
     def list_snapshots(self):
         return self.snapshot.list_snapshots()
 
+    def restore_snapshot(self, filename):
+        return self.snapshot.restore_snapshot(filename)
+
     def tick(self):
         self.scheduler.run(self.agents)
 

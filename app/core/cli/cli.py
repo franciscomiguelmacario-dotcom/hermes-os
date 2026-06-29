@@ -1,3 +1,4 @@
+
 class CLI:
 
     def __init__(self, brain, logger):
@@ -48,7 +49,8 @@ class CLI:
                         "snapshot",
                         "snapshots",
                         "restore-backup <filename>",
-                     ]
+                        "restore-snapshot <filename>", 
+                    ]
                 })
                 continue
 
@@ -75,6 +77,11 @@ class CLI:
 
             if cmd == "snapshot":
                 self.logger.info(self.brain.create_snapshot())
+                continue
+
+            if cmd.startswith("restore-snapshot "):
+                filename = cmd.replace("restore-snapshot ", "", 1).strip()
+                self.logger.info(self.brain.restore_snapshot(filename))
                 continue
 
             if cmd == "snapshots":
