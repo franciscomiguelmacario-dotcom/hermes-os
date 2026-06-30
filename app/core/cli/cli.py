@@ -19,6 +19,12 @@ class CLI:
                     "commands": [
                         "help",
                         "jarvis <texto>",
+                        "store",
+                        "set-store <key> <value>",
+                        "products",
+                        "create-product <title> | <price> | <cost>",
+                        "update-product <id> <key> <value>",
+                        "delete-product <id>",
                         "ask <texto>",
                         "health",
                         "status",
@@ -205,6 +211,56 @@ class CLI:
 
                 _, key, value = parts
                 self.logger.info(self.brain.set_business_value(key, value))
+                continue
+
+            if cmd == "store":
+                self.logger.info(self.brain.store_config())
+                continue
+
+            if cmd.startswith("set-store "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-store <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_store_value(key, value))
+                continue
+
+            if cmd == "products":
+                self.logger.info(self.brain.store_products())
+                continue
+
+            if cmd.startswith("create-product "):
+                raw = cmd.replace("create-product ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                title = parts[0]
+                price = parts[1] if len(parts) > 1 else None
+                cost = parts[2] if len(parts) > 2 else None
+
+                self.logger.info(
+                    self.brain.create_store_product(title, price, cost)
+                )
+                continue
+
+            if cmd.startswith("update-product "):
+                parts = cmd.split(" ", 3)
+
+                if len(parts) < 4:
+                    self.logger.info("usage: update-product <id> <key> <value>")
+                    continue
+
+                _, product_id, key, value = parts
+                self.logger.info(
+                    self.brain.update_store_product(product_id, key, value)
+                )
+                continue
+
+            if cmd.startswith("delete-product "):
+                product_id = cmd.replace("delete-product ", "", 1).strip()
+                self.logger.info(self.brain.delete_store_product(product_id))
                 continue
 
             if cmd == "tasks":

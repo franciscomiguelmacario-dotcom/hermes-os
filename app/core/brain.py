@@ -1,3 +1,4 @@
+from app.core.connectors.store_connector import StoreConnector
 from app.core.voice.jarvis_mode import JarvisMode
 from app.core.voice.listen_engine import ListenEngine
 from app.core.voice.speech_engine import SpeechEngine
@@ -35,6 +36,7 @@ class Brain:
         self.workflows = WorkflowEngine(self.tasks, logger)
         self.reports = ReportEngine(memory, self.tasks)
         self.business = BusinessProfile(memory)
+        self.store = StoreConnector(memory, logger)
         self.decisions = DecisionEngine(memory, self.tasks)
         self.autopilot = AutopilotEngine(
             self.decisions,
@@ -251,6 +253,24 @@ Responde em português, de forma curta, prática e direta.
 
     def start_jarvis_mode(self, cycles=10, seconds=5):
         return self.jarvis_mode.start(cycles, seconds)
+
+    def store_config(self):
+        return self.store.config()
+
+    def set_store_value(self, key, value):
+        return self.store.set_value(key, value)
+
+    def store_products(self):
+        return self.store.products()
+
+    def create_store_product(self, title, price=None, cost=None):
+        return self.store.create_product(title, price, cost)
+
+    def update_store_product(self, product_id, key, value):
+        return self.store.update_product(product_id, key, value)
+
+    def delete_store_product(self, product_id):
+        return self.store.delete_product(product_id)
 
     def tick(self):
         self.scheduler.run(self.agents)
