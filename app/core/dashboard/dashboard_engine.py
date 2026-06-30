@@ -27,6 +27,12 @@ class DashboardEngine:
 
         return 0
 
+    def latest_item(self, value):
+        if isinstance(value, list) and value:
+            return value[-1]
+
+        return None
+
     def mask_sensitive_config(self, config):
         if not isinstance(config, dict):
             return config
@@ -34,20 +40,12 @@ class DashboardEngine:
         masked = dict(config)
 
         for key in ["api_key", "api_secret", "access_token"]:
-            value = masked.get(key)
-
-            if value:
+            if masked.get(key):
                 masked[key] = "***configured***"
             else:
                 masked[key] = ""
 
         return masked
-
-    def latest_item(self, value):
-        if isinstance(value, list) and value:
-            return value[-1]
-
-        return None
 
     def data(self):
         products = self.safe("store_products", [])
@@ -73,6 +71,11 @@ class DashboardEngine:
         supplier_api_config = self.safe("supplier_api_config", {})
         supplier_api_history = self.safe("supplier_api_history", [])
 
+        fulfillment_pipeline_history = self.safe(
+            "fulfillment_pipeline_history",
+            []
+        )
+
         active_products = [
             product for product in products
             if product.get("status") == "active"
@@ -94,6 +97,13 @@ class DashboardEngine:
             if order.get("fulfillment_status") == "fulfilled"
         ]
 
+        supplier_submitted_orders = [
+            order for order in orders
+            if order.get("fulfillment_status") == "supplier_submitted"
+            or order.get("status") == "supplier_submitted"
+            or order.get("status") == "supplier_dry_run_prepared"
+        ]
+
         dashboard = {
             "status": "dashboard_ready",
             "generated_at": datetime.now().isoformat(),
@@ -104,26 +114,43 @@ class DashboardEngine:
                 "orders": self.count_list(orders),
                 "pending_orders": self.count_list(pending_orders),
                 "fulfilled_orders": self.count_list(fulfilled_orders),
+                "supplier_submitted_orders": self.count_list(
+                    supplier_submitted_orders
+                ),
                 "campaigns": self.count_list(campaigns),
                 "active_campaigns": self.count_list(active_campaigns),
                 "paused_campaigns": self.count_list(paused_campaigns),
                 "notifications": self.count_list(notifications),
-                "pending_notifications": self.count_list(pending_notifications),
+                "pending_notifications": self.count_list(
+                    pending_notifications
+                ),
                 "support_tickets": self.count_list(support_tickets),
                 "pending_support": self.count_list(pending_support),
                 "store_api_events": self.count_list(store_api_history),
-                "supplier_api_events": self.count_list(supplier_api_history)
+                "supplier_api_events": self.count_list(supplier_api_history),
+                "fulfillment_events": self.count_list(
+                    fulfillment_pipeline_history
+                )
             },
             "money": {
                 "revenue": sales_summary.get("revenue", 0),
                 "costs": sales_summary.get("costs", 0),
                 "profit": sales_summary.get("profit", 0),
-                "average_order_value": sales_summary.get("average_order_value", 0)
+                "average_order_value": sales_summary.get(
+                    "average_order_value",
+                    0
+                )
             },
             "sales_summary": sales_summary,
             "profit_report": profit_report,
             "campaign_report": campaign_report,
             "campaign_performance": campaign_performance,
+            "orders": {
+                "all": orders,
+                "pending": pending_orders,
+                "fulfilled": fulfilled_orders,
+                "supplier_submitted": supplier_submitted_orders
+            },
             "store_api": {
                 "config": self.mask_sensitive_config(store_api_config),
                 "history_count": self.count_list(store_api_history),
@@ -133,6 +160,15 @@ class DashboardEngine:
                 "config": self.mask_sensitive_config(supplier_api_config),
                 "history_count": self.count_list(supplier_api_history),
                 "latest_sync": self.latest_item(supplier_api_history)
+            },
+            "fulfillment": {
+                "history_count": self.count_list(
+                    fulfillment_pipeline_history
+                ),
+                "latest_event": self.latest_item(
+                    fulfillment_pipeline_history
+                ),
+                "history": fulfillment_pipeline_history
             },
             "autopilot": {
                 "config": autopilot_config,
@@ -146,7 +182,8 @@ class DashboardEngine:
                 active_campaigns,
                 sales_summary,
                 store_api_config,
-                supplier_api_config
+                supplier_api_config,
+                supplier_submitted_orders
             ),
             "next_recommended_actions": self.next_actions(
                 products,
@@ -156,7 +193,8 @@ class DashboardEngine:
                 pending_support,
                 active_campaigns,
                 store_api_config,
-                supplier_api_config
+                supplier_api_config,
+                supplier_submitted_orders
             )
         }
 
@@ -170,7 +208,8 @@ class DashboardEngine:
         active_campaigns,
         sales_summary,
         store_api_config,
-        supplier_api_config
+        supplier_api_config,
+        supplier_submitted_orders
     ):
         alerts = []
 
@@ -180,16 +219,28 @@ class DashboardEngine:
                 "message": f"{len(pending_orders)} encomenda(s) pendente(s)."
             })
 
+        if supplier_submitted_orders:
+            alerts.append({
+                "level": "info",
+                "message": (
+                    f"{len(supplier_submitted_orders)} encomenda(s) "
+                    "preparada(s)/submetida(s) ao fornecedor."
+                )
+            })
+
         if pending_notifications:
             alerts.append({
                 "level": "info",
-                "message": f"{len(pending_notifications)} notificação(ões) por enviar."
+                "message": (
+                    f"{len(pending_notifications)} notificação(ões) "
+                    "por enviar."
+                )
             })
 
         if pending_support:
             alerts.append({
                 "level": "warning",
-                "message": f"{len(pending_support)} ticket(s) de suporte aberto(s)."
+                "message": f"{len(pending_support)} ticket(s) aberto(s)."
             })
 
         if not active_campaigns:
@@ -207,7 +258,7 @@ class DashboardEngine:
         if store_api_config.get("dry_run"):
             alerts.append({
                 "level": "warning",
-                "message": "Store API está em modo dry-run. Nada será enviado para loja real."
+                "message": "Store API em dry-run."
             })
 
         if not supplier_api_config.get("enabled"):
@@ -219,7 +270,7 @@ class DashboardEngine:
         if supplier_api_config.get("dry_run"):
             alerts.append({
                 "level": "warning",
-                "message": "Supplier API está em modo dry-run. Nenhuma encomenda real será enviada ao fornecedor."
+                "message": "Supplier API em dry-run."
             })
 
         profit = float(sales_summary.get("profit") or 0)
@@ -247,7 +298,8 @@ class DashboardEngine:
         pending_support,
         active_campaigns,
         store_api_config,
-        supplier_api_config
+        supplier_api_config,
+        supplier_submitted_orders
     ):
         actions = []
 
@@ -255,33 +307,30 @@ class DashboardEngine:
             actions.append("Adicionar produtos de fornecedor.")
 
         if supplier_products and not products:
-            actions.append("Lançar o melhor produto com launch-best-product 40.")
+            actions.append("Lançar o melhor produto.")
 
         if products and not active_campaigns:
-            actions.append("Criar e lançar campanha para produto ativo.")
+            actions.append("Criar campanha para produto ativo.")
 
         if pending_orders:
-            actions.append("Processar encomendas pendentes ou enviar para fornecedor.")
+            actions.append("Enviar encomendas pendentes ao fornecedor.")
+
+        if supplier_submitted_orders:
+            actions.append("Registar tracking quando o fornecedor enviar.")
 
         if pending_support:
-            actions.append("Responder tickets com auto-reply-support-all.")
+            actions.append("Responder tickets de suporte.")
 
         if pending_notifications:
-            actions.append("Enviar notificações com send-notifications.")
+            actions.append("Enviar notificações pendentes.")
 
         if not store_api_config.get("enabled"):
-            actions.append("Configurar ligação à loja real no painel Store API.")
+            actions.append("Configurar Store API.")
 
         if not supplier_api_config.get("enabled"):
-            actions.append("Configurar ligação ao fornecedor no painel Supplier API.")
-
-        if store_api_config.get("dry_run"):
-            actions.append("Manter Store API em dry-run enquanto testas.")
-
-        if supplier_api_config.get("dry_run"):
-            actions.append("Manter Supplier API em dry-run enquanto testas.")
+            actions.append("Configurar Supplier API.")
 
         if not actions:
-            actions.append("Executar store-autopilot 40 | 10 | facebook_ads | HER.")
+            actions.append("Executar Store Autopilot.")
 
         return actions

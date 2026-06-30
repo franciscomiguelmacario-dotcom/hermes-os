@@ -12,23 +12,22 @@ PAGE = """
 <html lang="pt">
 <head>
     <meta charset="utf-8">
-    <title>Hermes OS // Command Center</title>
+    <title>Hermes OS</title>
 
     <style>
         :root {
-            --bg: #030712;
-            --panel: rgba(15, 23, 42, 0.72);
-            --border: rgba(56, 189, 248, 0.28);
-            --border-soft: rgba(148, 163, 184, 0.18);
+            --bg: #020617;
+            --panel: rgba(15, 23, 42, 0.82);
+            --border: rgba(34, 211, 238, 0.28);
+            --soft: rgba(148, 163, 184, 0.18);
+            --text: #e5e7eb;
+            --muted: #94a3b8;
             --cyan: #22d3ee;
             --blue: #3b82f6;
             --purple: #8b5cf6;
             --green: #22c55e;
             --yellow: #eab308;
             --red: #ef4444;
-            --text: #e5e7eb;
-            --muted: #94a3b8;
-            --dark: #020617;
         }
 
         * {
@@ -41,11 +40,9 @@ PAGE = """
             font-family: Arial, Helvetica, sans-serif;
             color: var(--text);
             background:
-                radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.20), transparent 28%),
-                radial-gradient(circle at 80% 10%, rgba(139, 92, 246, 0.18), transparent 30%),
-                radial-gradient(circle at 50% 90%, rgba(59, 130, 246, 0.12), transparent 35%),
-                linear-gradient(135deg, #020617 0%, #030712 45%, #0f172a 100%);
-            overflow-x: hidden;
+                radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.18), transparent 28%),
+                radial-gradient(circle at 80% 5%, rgba(139, 92, 246, 0.16), transparent 30%),
+                linear-gradient(135deg, #020617, #030712 50%, #0f172a);
         }
 
         body::before {
@@ -56,33 +53,13 @@ PAGE = """
                 linear-gradient(rgba(34, 211, 238, 0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(34, 211, 238, 0.04) 1px, transparent 1px);
             background-size: 42px 42px;
-            mask-image: linear-gradient(to bottom, black, transparent 85%);
             pointer-events: none;
-        }
-
-        body::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(
-                115deg,
-                transparent 0%,
-                rgba(34, 211, 238, 0.04) 45%,
-                transparent 55%
-            );
-            animation: scan 8s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scan {
-            0% { transform: translateX(-80%); }
-            100% { transform: translateX(80%); }
         }
 
         .shell {
             width: min(1500px, calc(100% - 32px));
             margin: 0 auto;
-            padding: 22px 0 40px;
+            padding: 22px 0 44px;
             position: relative;
             z-index: 1;
         }
@@ -90,16 +67,14 @@ PAGE = """
         .topbar {
             display: flex;
             justify-content: space-between;
-            gap: 18px;
             align-items: center;
+            gap: 18px;
             padding: 18px;
             border: 1px solid var(--border);
             border-radius: 24px;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(2, 6, 23, 0.82));
-            box-shadow:
-                0 0 40px rgba(34, 211, 238, 0.10),
-                inset 0 0 30px rgba(59, 130, 246, 0.05);
+            background: var(--panel);
             backdrop-filter: blur(18px);
+            box-shadow: 0 0 40px rgba(34, 211, 238, 0.10);
         }
 
         .brand {
@@ -118,12 +93,6 @@ PAGE = """
             box-shadow:
                 0 0 18px rgba(34, 211, 238, 0.95),
                 0 0 42px rgba(59, 130, 246, 0.45);
-            animation: pulse 2.4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.06); filter: brightness(1.25); }
         }
 
         h1 {
@@ -137,69 +106,59 @@ PAGE = """
             color: var(--muted);
             margin-top: 5px;
             font-size: 14px;
-            letter-spacing: 0.8px;
-        }
-
-        .small {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .system-status {
-            text-align: right;
-            min-width: 260px;
         }
 
         .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
             padding: 9px 12px;
             border: 1px solid rgba(34, 197, 94, 0.5);
             border-radius: 999px;
             color: #bbf7d0;
             background: rgba(22, 163, 74, 0.12);
-            box-shadow: 0 0 18px rgba(34, 197, 94, 0.18);
             font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 12px var(--green);
         }
 
         .timestamp {
-            margin-top: 8px;
             color: var(--muted);
             font-size: 12px;
+            margin-top: 8px;
+            text-align: right;
         }
 
-        .hero {
+        .hero,
+        .layout {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: 1.15fr 0.85fr;
             gap: 18px;
             margin-top: 18px;
         }
 
-        .panel {
-            border: 1px solid var(--border-soft);
-            border-radius: 24px;
-            background: var(--panel);
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .panel,
+        .metric-card,
+        .money-card,
+        form,
+        .list-item,
+        .terminal {
+            border: 1px solid var(--soft);
+            background: rgba(15, 23, 42, 0.72);
             backdrop-filter: blur(16px);
-            box-shadow:
-                0 0 30px rgba(2, 6, 23, 0.40),
-                inset 0 0 24px rgba(34, 211, 238, 0.03);
+        }
+
+        .panel {
+            border-radius: 24px;
             overflow: hidden;
         }
 
         .panel-header {
             padding: 16px 18px;
-            border-bottom: 1px solid var(--border-soft);
+            border-bottom: 1px solid var(--soft);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -213,6 +172,11 @@ PAGE = """
             text-transform: uppercase;
         }
 
+        .small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
         .panel-body {
             padding: 18px;
         }
@@ -223,65 +187,24 @@ PAGE = """
             gap: 14px;
         }
 
-        .money-card {
+        .money-card,
+        .metric-card {
             padding: 18px;
-            border: 1px solid rgba(34, 211, 238, 0.20);
             border-radius: 18px;
-            background: linear-gradient(135deg, rgba(2, 6, 23, 0.78), rgba(15, 23, 42, 0.70));
         }
 
-        .money-label {
+        .money-label,
+        .metric-title {
             color: var(--muted);
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
+            letter-spacing: 1.1px;
         }
 
         .money-value {
             margin-top: 10px;
             font-size: 30px;
             font-weight: 800;
-        }
-
-        .green { color: var(--green); }
-        .cyan { color: var(--cyan); }
-        .yellow { color: var(--yellow); }
-        .red { color: var(--red); }
-        .purple { color: #c4b5fd; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-top: 18px;
-        }
-
-        .metric-card {
-            padding: 18px;
-            border-radius: 20px;
-            border: 1px solid var(--border-soft);
-            background:
-                linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(2, 6, 23, 0.88)),
-                radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 36%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .metric-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 12px;
-            right: 12px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-        }
-
-        .metric-title {
-            color: var(--muted);
-            font-size: 12px;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
         }
 
         .metric-value {
@@ -296,12 +219,11 @@ PAGE = """
             margin-top: 6px;
         }
 
-        .layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-top: 18px;
-        }
+        .green { color: var(--green); }
+        .cyan { color: var(--cyan); }
+        .yellow { color: var(--yellow); }
+        .red { color: var(--red); }
+        .purple { color: #c4b5fd; }
 
         .actions-grid {
             display: grid;
@@ -310,21 +232,20 @@ PAGE = """
         }
 
         form {
-            border: 1px solid var(--border-soft);
             border-radius: 18px;
             padding: 14px;
-            background: rgba(2, 6, 23, 0.45);
         }
 
         form h3 {
             margin: 0 0 10px;
             font-size: 13px;
             letter-spacing: 1px;
-            text-transform: uppercase;
             color: var(--cyan);
+            text-transform: uppercase;
         }
 
-        input, select {
+        input,
+        select {
             width: 100%;
             margin-bottom: 8px;
             padding: 11px 12px;
@@ -337,8 +258,8 @@ PAGE = """
 
         label {
             display: flex;
-            gap: 8px;
             align-items: center;
+            gap: 8px;
             color: var(--muted);
             font-size: 13px;
             margin-bottom: 8px;
@@ -357,15 +278,25 @@ PAGE = """
             color: white;
             cursor: pointer;
             font-weight: 700;
-            letter-spacing: 0.5px;
             background: linear-gradient(135deg, var(--blue), var(--purple));
-            box-shadow: 0 0 18px rgba(59, 130, 246, 0.24);
         }
 
         button:hover {
             filter: brightness(1.15);
-            transform: translateY(-1px);
         }
+
+        .alert {
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid var(--soft);
+            background: rgba(2, 6, 23, 0.48);
+            margin-bottom: 10px;
+        }
+
+        .alert.ok { color: #bbf7d0; border-color: rgba(34, 197, 94, 0.35); }
+        .alert.warning { color: #fef08a; border-color: rgba(234, 179, 8, 0.38); }
+        .alert.danger { color: #fecaca; border-color: rgba(239, 68, 68, 0.38); }
+        .alert.info { color: #a5f3fc; border-color: rgba(34, 211, 238, 0.35); }
 
         .mini-list {
             display: grid;
@@ -374,13 +305,7 @@ PAGE = """
 
         .list-item {
             padding: 12px;
-            border: 1px solid var(--border-soft);
             border-radius: 14px;
-            background: rgba(2, 6, 23, 0.48);
-        }
-
-        .list-item strong {
-            color: white;
         }
 
         .list-item span {
@@ -390,48 +315,18 @@ PAGE = """
             margin-top: 4px;
         }
 
-        .alert {
-            padding: 12px;
-            border-radius: 14px;
-            border: 1px solid var(--border-soft);
-            background: rgba(2, 6, 23, 0.48);
-            margin-bottom: 10px;
-        }
-
-        .alert.ok {
-            border-color: rgba(34, 197, 94, 0.35);
-            color: #bbf7d0;
-        }
-
-        .alert.warning {
-            border-color: rgba(234, 179, 8, 0.38);
-            color: #fef08a;
-        }
-
-        .alert.danger {
-            border-color: rgba(239, 68, 68, 0.38);
-            color: #fecaca;
-        }
-
-        .alert.info {
-            border-color: rgba(34, 211, 238, 0.35);
-            color: #a5f3fc;
-        }
-
         .terminal {
             border-radius: 18px;
-            border: 1px solid rgba(34, 211, 238, 0.22);
-            background: rgba(2, 6, 23, 0.80);
             overflow: hidden;
         }
 
         .terminal-top {
             padding: 10px 12px;
-            border-bottom: 1px solid var(--border-soft);
+            border-bottom: 1px solid var(--soft);
             color: var(--muted);
             font-size: 12px;
-            letter-spacing: 1px;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         pre {
@@ -451,7 +346,6 @@ PAGE = """
         }
 
         .link-chip {
-            display: inline-flex;
             padding: 9px 12px;
             border-radius: 999px;
             border: 1px solid rgba(34, 211, 238, 0.28);
@@ -471,28 +365,19 @@ PAGE = """
                 grid-template-columns: 1fr;
             }
 
-            .money-grid,
-            .grid {
+            .grid,
+            .money-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
 
             .actions-grid {
                 grid-template-columns: 1fr;
             }
-
-            .topbar {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .system-status {
-                text-align: left;
-            }
         }
 
         @media (max-width: 640px) {
-            .money-grid,
-            .grid {
+            .grid,
+            .money-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -510,16 +395,13 @@ PAGE = """
                 <div class="orb"></div>
                 <div>
                     <h1>Hermes OS</h1>
-                    <div class="subtitle">Autonomous Dropshipping Command Center</div>
+                    <div class="subtitle">Dropshipping Autonomous Command Center</div>
                 </div>
             </div>
 
-            <div class="system-status">
-                <div class="status-pill">
-                    <span class="dot"></span>
-                    Sistema operacional
-                </div>
-                <div class="timestamp">{{ data.get("generated_at") }}</div>
+            <div>
+                <div class="status-pill">Sistema operacional</div>
+                <div class="timestamp">{{ data.get('generated_at') }}</div>
             </div>
         </section>
 
@@ -534,50 +416,50 @@ PAGE = """
                     <div class="money-grid">
                         <div class="money-card">
                             <div class="money-label">Receita</div>
-                            <div class="money-value cyan">{{ money.get("revenue", 0) }}€</div>
+                            <div class="money-value cyan">{{ money.get('revenue', 0) }}€</div>
                         </div>
 
                         <div class="money-card">
                             <div class="money-label">Custos</div>
-                            <div class="money-value yellow">{{ money.get("costs", 0) }}€</div>
+                            <div class="money-value yellow">{{ money.get('costs', 0) }}€</div>
                         </div>
 
                         <div class="money-card">
                             <div class="money-label">Lucro</div>
                             <div class="money-value {% if money.get('profit', 0) < 0 %}red{% else %}green{% endif %}">
-                                {{ money.get("profit", 0) }}€
+                                {{ money.get('profit', 0) }}€
                             </div>
                         </div>
 
                         <div class="money-card">
-                            <div class="money-label">Ticket médio</div>
-                            <div class="money-value purple">{{ money.get("average_order_value", 0) }}€</div>
+                            <div class="money-label">Ticket Médio</div>
+                            <div class="money-value purple">{{ money.get('average_order_value', 0) }}€</div>
                         </div>
                     </div>
 
                     <div class="grid">
                         <div class="metric-card">
                             <div class="metric-title">Produtos</div>
-                            <div class="metric-value">{{ summary.get("products", 0) }}</div>
-                            <div class="metric-sub">Ativos: {{ summary.get("active_products", 0) }}</div>
+                            <div class="metric-value">{{ summary.get('products', 0) }}</div>
+                            <div class="metric-sub">Ativos: {{ summary.get('active_products', 0) }}</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-title">Encomendas</div>
-                            <div class="metric-value">{{ summary.get("orders", 0) }}</div>
-                            <div class="metric-sub">Pendentes: {{ summary.get("pending_orders", 0) }}</div>
+                            <div class="metric-value">{{ summary.get('orders', 0) }}</div>
+                            <div class="metric-sub">Pendentes: {{ summary.get('pending_orders', 0) }}</div>
                         </div>
 
                         <div class="metric-card">
                             <div class="metric-title">Campanhas</div>
-                            <div class="metric-value">{{ summary.get("campaigns", 0) }}</div>
-                            <div class="metric-sub">Ativas: {{ summary.get("active_campaigns", 0) }}</div>
+                            <div class="metric-value">{{ summary.get('campaigns', 0) }}</div>
+                            <div class="metric-sub">Ativas: {{ summary.get('active_campaigns', 0) }}</div>
                         </div>
 
                         <div class="metric-card">
-                            <div class="metric-title">Autopilot</div>
-                            <div class="metric-value">{{ autopilot.get("cycles_count", 0) }}</div>
-                            <div class="metric-sub">Ciclos executados</div>
+                            <div class="metric-title">Fulfillment</div>
+                            <div class="metric-value">{{ summary.get('fulfillment_events', 0) }}</div>
+                            <div class="metric-sub">Eventos pipeline</div>
                         </div>
                     </div>
                 </div>
@@ -592,11 +474,9 @@ PAGE = """
                 <div class="panel-body">
                     {% for alert in alerts %}
                         <div class="alert {{ alert.get('level') }}">
-                            {{ alert.get("message") }}
+                            {{ alert.get('message') }}
                         </div>
                     {% endfor %}
-
-                    <div style="height: 12px;"></div>
 
                     <div class="mini-list">
                         {% for action in actions %}
@@ -613,34 +493,34 @@ PAGE = """
         <section class="grid">
             <div class="metric-card">
                 <div class="metric-title">Fornecedor</div>
-                <div class="metric-value">{{ summary.get("supplier_products", 0) }}</div>
+                <div class="metric-value">{{ summary.get('supplier_products', 0) }}</div>
                 <div class="metric-sub">Produtos disponíveis</div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-title">Notificações</div>
-                <div class="metric-value">{{ summary.get("notifications", 0) }}</div>
-                <div class="metric-sub">Pendentes: {{ summary.get("pending_notifications", 0) }}</div>
-            </div>
-
-            <div class="metric-card">
                 <div class="metric-title">Store API</div>
-                <div class="metric-value">{{ summary.get("store_api_events", 0) }}</div>
+                <div class="metric-value">{{ summary.get('store_api_events', 0) }}</div>
                 <div class="metric-sub">
-                    {{ store_api.get("config", {}).get("provider", "dry_run") }}
+                    {{ store_api.get('config', {}).get('provider', 'dry_run') }}
                     /
-                    {% if store_api.get("config", {}).get("dry_run") %}dry-run{% else %}real{% endif %}
+                    {% if store_api.get('config', {}).get('dry_run') %}dry-run{% else %}real{% endif %}
                 </div>
             </div>
 
             <div class="metric-card">
                 <div class="metric-title">Supplier API</div>
-                <div class="metric-value">{{ summary.get("supplier_api_events", 0) }}</div>
+                <div class="metric-value">{{ summary.get('supplier_api_events', 0) }}</div>
                 <div class="metric-sub">
-                    {{ supplier_api.get("config", {}).get("provider", "dry_run") }}
+                    {{ supplier_api.get('config', {}).get('provider', 'dry_run') }}
                     /
-                    {% if supplier_api.get("config", {}).get("dry_run") %}dry-run{% else %}real{% endif %}
+                    {% if supplier_api.get('config', {}).get('dry_run') %}dry-run{% else %}real{% endif %}
                 </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-title">Tracking</div>
+                <div class="metric-value">{{ summary.get('fulfilled_orders', 0) }}</div>
+                <div class="metric-sub">Encomendas enviadas</div>
             </div>
         </section>
 
@@ -648,47 +528,90 @@ PAGE = """
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Quick Actions</h2>
-                    <span class="small">Controlos operacionais</span>
+                    <span class="small">Operação</span>
                 </div>
 
                 <div class="panel-body">
                     <div class="actions-grid">
                         <form method="post" action="/action/store-autopilot">
                             <h3>Executar Store Autopilot</h3>
-                            <input name="margin" placeholder="Margem %" value="40">
-                            <input name="budget" placeholder="Budget" value="10">
-                            <input name="channel" placeholder="Canal" value="facebook_ads">
-                            <input name="tracking_prefix" placeholder="Tracking prefix" value="HER">
-                            <button type="submit">Iniciar ciclo autónomo</button>
+                            <input name="margin" value="40" placeholder="Margem %">
+                            <input name="budget" value="10" placeholder="Budget">
+                            <input name="channel" value="facebook_ads" placeholder="Canal">
+                            <input name="tracking_prefix" value="HER" placeholder="Tracking prefix">
+                            <button type="submit">Iniciar ciclo</button>
                         </form>
 
                         <form method="post" action="/action/add-supplier-product">
                             <h3>Adicionar produto fornecedor</h3>
-                            <input name="title" placeholder="Produto fornecedor" value="Relógio inteligente">
-                            <input name="cost" placeholder="Custo" value="12.50">
-                            <input name="shipping_days" placeholder="Dias envio" value="8">
-                            <input name="supplier_url" placeholder="URL fornecedor" value="https://fornecedor.local/produto">
-                            <input name="category" placeholder="Categoria" value="gadgets">
-                            <button type="submit">Adicionar produto</button>
+                            <input name="title" value="Relógio inteligente" placeholder="Produto">
+                            <input name="cost" value="12.50" placeholder="Custo">
+                            <input name="shipping_days" value="8" placeholder="Dias envio">
+                            <input name="supplier_url" value="https://fornecedor.local/produto" placeholder="URL">
+                            <input name="category" value="gadgets" placeholder="Categoria">
+                            <button type="submit">Adicionar</button>
                         </form>
 
                         <form method="post" action="/action/create-order">
                             <h3>Criar encomenda teste</h3>
-                            <input name="product_id" placeholder="ID produto" value="1">
-                            <input name="customer_name" placeholder="Nome cliente" value="Francisco">
-                            <input name="customer_email" placeholder="Email cliente" value="teste@email.com">
-                            <input name="quantity" placeholder="Quantidade" value="1">
+                            <input name="product_id" value="1" placeholder="ID produto">
+                            <input name="customer_name" value="Francisco" placeholder="Cliente">
+                            <input name="customer_email" value="teste@email.com" placeholder="Email">
+                            <input name="quantity" value="1" placeholder="Quantidade">
                             <button type="submit">Criar encomenda</button>
                         </form>
 
                         <form method="post" action="/action/send-notifications">
                             <h3>Comunicações</h3>
-                            <button type="submit">Enviar notificações pendentes</button>
+                            <button type="submit">Enviar notificações</button>
                         </form>
                     </div>
                 </div>
             </div>
 
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Fulfillment Pipeline</h2>
+                    <span class="small">Fornecedor / Tracking</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="actions-grid">
+                        <form method="post" action="/action/submit-order-supplier">
+                            <h3>Enviar encomenda ao fornecedor</h3>
+                            <input name="order_id" value="1" placeholder="ID encomenda">
+                            <button type="submit">Preparar / enviar</button>
+                        </form>
+
+                        <form method="post" action="/action/submit-pending-orders-supplier">
+                            <h3>Enviar pendentes ao fornecedor</h3>
+                            <button type="submit">Processar pendentes</button>
+                        </form>
+
+                        <form method="post" action="/action/mark-supplier-tracking">
+                            <h3>Registar tracking</h3>
+                            <input name="order_id" value="1" placeholder="ID encomenda">
+                            <input name="tracking_number" value="TRACK-FORN-123" placeholder="Tracking">
+                            <button type="submit">Marcar como enviada</button>
+                        </form>
+
+                        <form method="post" action="/action/auto-reply-support">
+                            <h3>Suporte IA</h3>
+                            <button type="submit">Responder suporte</button>
+                        </form>
+                    </div>
+
+                    <div style="height: 14px;"></div>
+
+                    <div class="terminal">
+                        <div class="terminal-top">Último evento fulfillment</div>
+                        <pre>{{ fulfillment_latest }}</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Store API Bridge</h2>
@@ -697,44 +620,36 @@ PAGE = """
 
                 <div class="panel-body">
                     <form method="post" action="/action/store-api-config">
-                        <h3>Configurar loja real</h3>
+                        <h3>Configurar Store API</h3>
 
                         <select name="provider">
-                            <option value="dry_run" {% if store_api.get("config", {}).get("provider") == "dry_run" %}selected{% endif %}>Dry Run</option>
-                            <option value="shopify" {% if store_api.get("config", {}).get("provider") == "shopify" %}selected{% endif %}>Shopify</option>
-                            <option value="woocommerce" {% if store_api.get("config", {}).get("provider") == "woocommerce" %}selected{% endif %}>WooCommerce</option>
-                            <option value="custom" {% if store_api.get("config", {}).get("provider") == "custom" %}selected{% endif %}>Custom API</option>
+                            <option value="dry_run" {% if store_api.get('config', {}).get('provider') == 'dry_run' %}selected{% endif %}>Dry Run</option>
+                            <option value="shopify" {% if store_api.get('config', {}).get('provider') == 'shopify' %}selected{% endif %}>Shopify</option>
+                            <option value="woocommerce" {% if store_api.get('config', {}).get('provider') == 'woocommerce' %}selected{% endif %}>WooCommerce</option>
+                            <option value="custom" {% if store_api.get('config', {}).get('provider') == 'custom' %}selected{% endif %}>Custom API</option>
                         </select>
 
-                        <input name="base_url" placeholder="Base URL da loja" value="{{ store_api.get("config", {}).get("base_url", "") }}">
-                        <input name="access_token" placeholder="Access token / Bearer token" type="password">
-                        <input name="api_key" placeholder="API key" type="password">
-                        <input name="api_secret" placeholder="API secret" type="password">
+                        <input name="base_url" value="{{ store_api.get('config', {}).get('base_url', '') }}" placeholder="Base URL">
+                        <input name="access_token" type="password" placeholder="Access token">
+                        <input name="api_key" type="password" placeholder="API key">
+                        <input name="api_secret" type="password" placeholder="API secret">
 
                         <label>
-                            <input type="checkbox" name="enabled" {% if store_api.get("config", {}).get("enabled") %}checked{% endif %}>
+                            <input type="checkbox" name="enabled" {% if store_api.get('config', {}).get('enabled') %}checked{% endif %}>
                             Ativar Store API
                         </label>
 
                         <label>
-                            <input type="checkbox" name="dry_run" {% if store_api.get("config", {}).get("dry_run") %}checked{% endif %}>
-                            Modo seguro dry-run
+                            <input type="checkbox" name="dry_run" {% if store_api.get('config', {}).get('dry_run') %}checked{% endif %}>
+                            Dry-run
                         </label>
 
                         <label>
-                            <input type="checkbox" name="auto_sync_on_publish" {% if store_api.get("config", {}).get("auto_sync_on_publish") %}checked{% endif %}>
-                            Auto sync ao publicar produto
+                            <input type="checkbox" name="auto_sync_on_publish" {% if store_api.get('config', {}).get('auto_sync_on_publish') %}checked{% endif %}>
+                            Auto sync
                         </label>
 
                         <button type="submit">Guardar Store API</button>
-                    </form>
-
-                    <div style="height: 14px;"></div>
-
-                    <form method="post" action="/action/push-product-store">
-                        <h3>Enviar produto específico</h3>
-                        <input name="product_id" placeholder="ID produto" value="1">
-                        <button type="submit">Preparar / enviar produto</button>
                     </form>
 
                     <div style="height: 14px;"></div>
@@ -745,79 +660,41 @@ PAGE = """
                     </form>
                 </div>
             </div>
-        </section>
 
-        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Supplier API Bridge</h2>
-                    <span class="small">Fornecedor / fulfillment real</span>
+                    <span class="small">Fornecedor real</span>
                 </div>
 
                 <div class="panel-body">
                     <form method="post" action="/action/supplier-api-config">
-                        <h3>Configurar fornecedor</h3>
+                        <h3>Configurar Supplier API</h3>
 
                         <select name="provider">
-                            <option value="dry_run" {% if supplier_api.get("config", {}).get("provider") == "dry_run" %}selected{% endif %}>Dry Run</option>
-                            <option value="custom" {% if supplier_api.get("config", {}).get("provider") == "custom" %}selected{% endif %}>Custom API</option>
-                            <option value="aliexpress" {% if supplier_api.get("config", {}).get("provider") == "aliexpress" %}selected{% endif %}>AliExpress</option>
-                            <option value="cj_dropshipping" {% if supplier_api.get("config", {}).get("provider") == "cj_dropshipping" %}selected{% endif %}>CJ Dropshipping</option>
+                            <option value="dry_run" {% if supplier_api.get('config', {}).get('provider') == 'dry_run' %}selected{% endif %}>Dry Run</option>
+                            <option value="custom" {% if supplier_api.get('config', {}).get('provider') == 'custom' %}selected{% endif %}>Custom API</option>
+                            <option value="aliexpress" {% if supplier_api.get('config', {}).get('provider') == 'aliexpress' %}selected{% endif %}>AliExpress</option>
+                            <option value="cj_dropshipping" {% if supplier_api.get('config', {}).get('provider') == 'cj_dropshipping' %}selected{% endif %}>CJ Dropshipping</option>
                         </select>
 
-                        <input name="base_url" placeholder="Base URL do fornecedor" value="{{ supplier_api.get("config", {}).get("base_url", "") }}">
-                        <input name="access_token" placeholder="Access token / Bearer token" type="password">
-                        <input name="api_key" placeholder="API key" type="password">
-                        <input name="api_secret" placeholder="API secret" type="password">
+                        <input name="base_url" value="{{ supplier_api.get('config', {}).get('base_url', '') }}" placeholder="Base URL">
+                        <input name="access_token" type="password" placeholder="Access token">
+                        <input name="api_key" type="password" placeholder="API key">
+                        <input name="api_secret" type="password" placeholder="API secret">
 
                         <label>
-                            <input type="checkbox" name="enabled" {% if supplier_api.get("config", {}).get("enabled") %}checked{% endif %}>
+                            <input type="checkbox" name="enabled" {% if supplier_api.get('config', {}).get('enabled') %}checked{% endif %}>
                             Ativar Supplier API
                         </label>
 
                         <label>
-                            <input type="checkbox" name="dry_run" {% if supplier_api.get("config", {}).get("dry_run") %}checked{% endif %}>
-                            Modo seguro dry-run
+                            <input type="checkbox" name="dry_run" {% if supplier_api.get('config', {}).get('dry_run') %}checked{% endif %}>
+                            Dry-run
                         </label>
 
                         <button type="submit">Guardar Supplier API</button>
                     </form>
-
-                    <div style="height: 14px;"></div>
-
-                    <form method="post" action="/action/submit-order-supplier">
-                        <h3>Enviar encomenda específica</h3>
-                        <input name="order_id" placeholder="ID encomenda" value="1">
-                        <button type="submit">Preparar / enviar encomenda</button>
-                    </form>
-
-                    <div style="height: 14px;"></div>
-
-                    <form method="post" action="/action/submit-pending-orders-supplier">
-                        <h3>Enviar encomendas pendentes</h3>
-                        <button type="submit">Processar pendentes no fornecedor</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h2 class="panel-title">API Logs</h2>
-                    <span class="small">Histórico de integrações</span>
-                </div>
-
-                <div class="panel-body">
-                    <div class="terminal">
-                        <div class="terminal-top">Store API Config</div>
-                        <pre>{{ store_api_config }}</pre>
-                    </div>
-
-                    <div style="height: 14px;"></div>
-
-                    <div class="terminal">
-                        <div class="terminal-top">Supplier API Config</div>
-                        <pre>{{ supplier_api_config }}</pre>
-                    </div>
                 </div>
             </div>
         </section>
@@ -834,14 +711,15 @@ PAGE = """
                         <a class="link-chip" href="/api/dashboard" target="_blank">Dashboard JSON</a>
                         <a class="link-chip" href="/api/products" target="_blank">Produtos</a>
                         <a class="link-chip" href="/api/orders" target="_blank">Encomendas</a>
+                        <a class="link-chip" href="/api/store-api" target="_blank">Store API</a>
+                        <a class="link-chip" href="/api/supplier-api" target="_blank">Supplier API</a>
+                        <a class="link-chip" href="/api/fulfillment" target="_blank">Fulfillment</a>
                         <a class="link-chip" href="/api/campaigns" target="_blank">Campanhas</a>
                         <a class="link-chip" href="/api/notifications" target="_blank">Notificações</a>
                         <a class="link-chip" href="/api/support" target="_blank">Suporte</a>
-                        <a class="link-chip" href="/api/store-api" target="_blank">Store API</a>
-                        <a class="link-chip" href="/api/supplier-api" target="_blank">Supplier API</a>
                     </div>
 
-                    <div style="height: 18px;"></div>
+                    <div style="height: 14px;"></div>
 
                     <div class="terminal">
                         <div class="terminal-top">Autopilot Config</div>
@@ -852,20 +730,20 @@ PAGE = """
 
             <div class="panel">
                 <div class="panel-header">
-                    <h2 class="panel-title">Latest API Events</h2>
-                    <span class="small">Últimos envios</span>
+                    <h2 class="panel-title">API Logs</h2>
+                    <span class="small">Últimos eventos</span>
                 </div>
 
                 <div class="panel-body">
                     <div class="terminal">
-                        <div class="terminal-top">Store API Last Event</div>
+                        <div class="terminal-top">Store API</div>
                         <pre>{{ store_api_history }}</pre>
                     </div>
 
                     <div style="height: 14px;"></div>
 
                     <div class="terminal">
-                        <div class="terminal-top">Supplier API Last Event</div>
+                        <div class="terminal-top">Supplier API</div>
                         <pre>{{ supplier_api_history }}</pre>
                     </div>
                 </div>
@@ -875,12 +753,12 @@ PAGE = """
         <section class="panel wide" style="margin-top: 18px;">
             <div class="panel-header">
                 <h2 class="panel-title">Hermes Raw Telemetry</h2>
-                <span class="small">Dados completos do sistema</span>
+                <span class="small">Dados completos</span>
             </div>
 
             <div class="panel-body">
                 <div class="terminal">
-                    <div class="terminal-top">Live System Snapshot</div>
+                    <div class="terminal-top">Live Snapshot</div>
                     <pre>{{ raw }}</pre>
                 </div>
             </div>
@@ -924,9 +802,7 @@ def create_app():
         masked = dict(config)
 
         for key in ["api_key", "api_secret", "access_token"]:
-            value = masked.get(key)
-
-            if value:
+            if masked.get(key):
                 masked[key] = "***configured***"
             else:
                 masked[key] = ""
@@ -941,6 +817,7 @@ def create_app():
         data = brain().dashboard_data()
         store_api = data.get("store_api", {})
         supplier_api = data.get("supplier_api", {})
+        fulfillment = data.get("fulfillment", {})
 
         return render_template_string(
             PAGE,
@@ -952,20 +829,18 @@ def create_app():
             autopilot=data.get("autopilot", {}),
             store_api=store_api,
             supplier_api=supplier_api,
+            fulfillment=fulfillment,
             autopilot_config=json_text(
                 data.get("autopilot", {}).get("config", {})
-            ),
-            store_api_config=json_text(
-                store_api.get("config", {})
-            ),
-            supplier_api_config=json_text(
-                supplier_api.get("config", {})
             ),
             store_api_history=json_text(
                 store_api.get("latest_sync", {})
             ),
             supplier_api_history=json_text(
                 supplier_api.get("latest_sync", {})
+            ),
+            fulfillment_latest=json_text(
+                fulfillment.get("latest_event", {})
             ),
             raw=json_text(data)
         )
@@ -1008,6 +883,12 @@ def create_app():
             "history": brain().supplier_api_history()
         })
 
+    @app.route("/api/fulfillment", methods=["GET"])
+    def api_fulfillment():
+        return jsonify({
+            "history": brain().fulfillment_pipeline_history()
+        })
+
     @app.route("/action/store-autopilot", methods=["POST"])
     def action_store_autopilot():
         brain().run_store_autopilot(
@@ -1045,6 +926,11 @@ def create_app():
     @app.route("/action/send-notifications", methods=["POST"])
     def action_send_notifications():
         brain().send_notifications()
+        return redirect(url_for("index"))
+
+    @app.route("/action/auto-reply-support", methods=["POST"])
+    def action_auto_reply_support():
+        brain().auto_reply_support_all()
         return redirect(url_for("index"))
 
     @app.route("/action/store-api-config", methods=["POST"])
@@ -1086,13 +972,6 @@ def create_app():
 
         if api_secret:
             brain().set_store_api_config("api_secret", api_secret)
-
-        return redirect(url_for("index"))
-
-    @app.route("/action/push-product-store", methods=["POST"])
-    def action_push_product_store():
-        product_id = request.form.get("product_id", "1")
-        brain().push_product_to_store(product_id)
 
         return redirect(url_for("index"))
 
@@ -1140,14 +1019,24 @@ def create_app():
 
     @app.route("/action/submit-order-supplier", methods=["POST"])
     def action_submit_order_supplier():
-        order_id = request.form.get("order_id", "1")
-        brain().submit_order_to_supplier(order_id)
+        brain().submit_order_to_supplier(
+            request.form.get("order_id", "1")
+        )
 
         return redirect(url_for("index"))
 
     @app.route("/action/submit-pending-orders-supplier", methods=["POST"])
     def action_submit_pending_orders_supplier():
         brain().submit_pending_orders_to_supplier()
+        return redirect(url_for("index"))
+
+    @app.route("/action/mark-supplier-tracking", methods=["POST"])
+    def action_mark_supplier_tracking():
+        brain().mark_supplier_tracking(
+            request.form.get("order_id", "1"),
+            request.form.get("tracking_number", "")
+        )
+
         return redirect(url_for("index"))
 
     return app
