@@ -1,3 +1,4 @@
+from app.core.dashboard.dashboard_engine import DashboardEngine
 from app.core.cycles.business_cycle import BusinessCycle
 from app.core.snapshot.snapshot_engine import SnapshotEngine
 from app.core.backup.backup_engine import BackupEngine
@@ -55,6 +56,8 @@ class Brain:
         self.snapshot = SnapshotEngine(self)
 
         self.business_cycle = BusinessCycle(self, logger)
+
+        self.dashboard = DashboardEngine(self)
 
         self.logger.info("Brain loaded")
 
@@ -174,6 +177,9 @@ class Brain:
 
     def business_cycle_history(self):
         return self.business_cycle.history()
+
+    def dashboard_data(self):
+        return self.dashboard.data()
 
     def tick(self):
         self.scheduler.run(self.agents)

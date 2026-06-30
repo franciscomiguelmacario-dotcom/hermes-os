@@ -29,6 +29,7 @@ class CLI:
                         "clear-tasks",
                         "task <texto>",
                         "workflows",
+                        "dashboard",
                         "workflow dropshipping",
                         "next-action",
                         "autopilot",
@@ -167,6 +168,10 @@ class CLI:
                     max_steps = int(parts[1])
 
                 self.logger.info(self.brain.autopilot_cycle(max_steps))
+                continue
+
+            if cmd == "dashboard":
+                self.logger.info(self.brain.dashboard_data())
                 continue
 
             if cmd == "report":
