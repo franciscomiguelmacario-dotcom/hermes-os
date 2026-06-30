@@ -1,3 +1,4 @@
+from app.core.pricing.pricing_engine import PricingEngine
 from app.core.connectors.supplier_connector import SupplierConnector
 from app.core.connectors.store_connector import StoreConnector
 from app.core.voice.jarvis_mode import JarvisMode
@@ -38,6 +39,7 @@ class Brain:
         self.reports = ReportEngine(memory, self.tasks)
         self.business = BusinessProfile(memory)
         self.store = StoreConnector(memory, logger)
+        self.pricing = PricingEngine(memory, logger)
         self.supplier = SupplierConnector(memory, logger)
         self.decisions = DecisionEngine(memory, self.tasks)
         self.autopilot = AutopilotEngine(
@@ -191,6 +193,15 @@ class Brain:
 
     def delete_supplier_product(self, product_id):
         return self.supplier.delete_product(product_id)
+
+    def pricing_config(self):
+        return self.pricing.config()
+
+    def set_pricing_value(self, key, value):
+        return self.pricing.set_value(key, value)
+
+    def calculate_price(self, cost, shipping=0, margin_percent=None):
+        return self.pricing.calculate(cost, shipping, margin_percent)
 
     def health_check(self):
         return self.health.run()

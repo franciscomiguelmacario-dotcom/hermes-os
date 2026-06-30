@@ -25,6 +25,9 @@ class CLI:
                         "create-product <title> | <price> | <cost>",
                         "update-product <id> <key> <value>",
                         "delete-product <id>",
+                        "pricing",
+                        "set-pricing <key> <value>",
+                        "price <cost> <shipping> <margin_percent>",
                         "supplier",
                         "set-supplier <key> <value>",
                         "supplier-products",
@@ -217,6 +220,33 @@ class CLI:
 
                 _, key, value = parts
                 self.logger.info(self.brain.set_business_value(key, value))
+                continue
+
+            if cmd == "pricing":
+                self.logger.info(self.brain.pricing_config())
+                continue
+
+            if cmd.startswith("set-pricing "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-pricing <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_pricing_value(key, value))
+                continue
+
+            if cmd.startswith("price "):
+                parts = cmd.split(" ")
+
+                cost = parts[1] if len(parts) > 1 else 0
+                shipping = parts[2] if len(parts) > 2 else 0
+                margin = parts[3] if len(parts) > 3 else None
+
+                self.logger.info(
+                    self.brain.calculate_price(cost, shipping, margin)
+                )
                 continue
 
             if cmd == "supplier":
