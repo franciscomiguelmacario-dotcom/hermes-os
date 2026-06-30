@@ -24,10 +24,6 @@ def create_app():
             padding: 30px;
         }
 
-        h1 {
-            margin-bottom: 10px;
-        }
-
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -40,11 +36,6 @@ def create_app():
             border: 1px solid #333;
             border-radius: 12px;
             padding: 18px;
-        }
-
-        .card h2 {
-            margin-top: 0;
-            font-size: 18px;
         }
 
         pre {
@@ -62,7 +53,7 @@ def create_app():
             border-radius: 8px;
             border: none;
             cursor: pointer;
-            margin-right: 8px;
+            margin: 4px;
         }
     </style>
 </head>
@@ -71,6 +62,11 @@ def create_app():
     <p>Business automation control panel</p>
 
     <button onclick="loadDashboard()">Refresh</button>
+    <button onclick="runAction('/api/action/autopilot')">Autopilot</button>
+    <button onclick="runAction('/api/action/business-cycle')">Business Cycle</button>
+    <button onclick="runAction('/api/action/export-obsidian')">Export Obsidian</button>
+    <button onclick="runAction('/api/action/backup')">Backup</button>
+    <button onclick="runAction('/api/action/clear-tasks')">Clear Tasks</button>
 
     <div class="grid">
         <div class="card">
@@ -102,6 +98,11 @@ def create_app():
             <h2>Cycle History</h2>
             <pre id="cycles">Loading...</pre>
         </div>
+
+        <div class="card">
+            <h2>Last Action Result</h2>
+            <pre id="result">None</pre>
+        </div>
     </div>
 
     <script>
@@ -115,6 +116,17 @@ def create_app():
             document.getElementById("tasks").textContent = JSON.stringify(data.tasks, null, 2);
             document.getElementById("agents").textContent = JSON.stringify(data.agents, null, 2);
             document.getElementById("cycles").textContent = JSON.stringify(data.cycle_history, null, 2);
+        }
+
+        async function runAction(url) {
+            document.getElementById("result").textContent = "Running...";
+
+            const response = await fetch(url, { method: "POST" });
+            const data = await response.json();
+
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+
+            await loadDashboard();
         }
 
         loadDashboard();
@@ -138,6 +150,26 @@ def create_app():
     @app.route("/api/tasks")
     def tasks():
         return jsonify(hermes.brain.tasks.all())
+
+    @app.route("/api/action/autopilot", methods=["POST"])
+    def action_autopilot():
+        return jsonify(hermes.brain.autopilot_once())
+
+    @app.route("/api/action/business-cycle", methods=["POST"])
+    def action_business_cycle():
+        return jsonify(hermes.brain.run_business_cycle())
+
+    @app.route("/api/action/export-obsidian", methods=["POST"])
+    def action_export_obsidian():
+        return jsonify(hermes.brain.export_obsidian_report())
+
+    @app.route("/api/action/backup", methods=["POST"])
+    def action_backup():
+        return jsonify(hermes.brain.create_backup())
+
+    @app.route("/api/action/clear-tasks", methods=["POST"])
+    def action_clear_tasks():
+        return jsonify(hermes.brain.clear_tasks())
 
     return app
 
