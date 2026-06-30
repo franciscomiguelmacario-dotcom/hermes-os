@@ -40,6 +40,12 @@ class CLI:
                         "sales-summary",
                         "best-selling-products",
                         "profit-report",
+                        "campaigns",
+                        "create-campaign <product_id> | <budget> | <channel>",
+                        "create-best-campaign <budget> | <channel>",
+                        "launch-campaign <id>",
+                        "pause-campaign <id>",
+                        "campaign-report",
                         "report",
                         "dashboard",
                         "exit"
@@ -184,6 +190,56 @@ class CLI:
 
             if cmd == "profit-report":
                 self.logger.info(self.brain.profit_report())
+                continue
+
+            if cmd == "campaigns":
+                self.logger.info(self.brain.campaigns_all())
+                continue
+
+            if cmd.startswith("create-campaign "):
+                raw = cmd.replace("create-campaign ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                product_id = parts[0]
+                budget = parts[1] if len(parts) > 1 else 10
+                channel = parts[2] if len(parts) > 2 else "facebook_ads"
+
+                self.logger.info(
+                    self.brain.create_campaign(
+                        product_id,
+                        budget,
+                        channel
+                    )
+                )
+                continue
+
+            if cmd.startswith("create-best-campaign"):
+                raw = cmd.replace("create-best-campaign", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|") if p.strip()]
+
+                budget = parts[0] if len(parts) > 0 else 10
+                channel = parts[1] if len(parts) > 1 else "facebook_ads"
+
+                self.logger.info(
+                    self.brain.create_best_campaign(
+                        budget,
+                        channel
+                    )
+                )
+                continue
+
+            if cmd.startswith("launch-campaign "):
+                campaign_id = cmd.replace("launch-campaign ", "", 1).strip()
+                self.logger.info(self.brain.launch_campaign(campaign_id))
+                continue
+
+            if cmd.startswith("pause-campaign "):
+                campaign_id = cmd.replace("pause-campaign ", "", 1).strip()
+                self.logger.info(self.brain.pause_campaign(campaign_id))
+                continue
+
+            if cmd == "campaign-report":
+                self.logger.info(self.brain.campaign_report())
                 continue
 
             if cmd == "report":

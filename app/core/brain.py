@@ -25,6 +25,7 @@ from app.core.publisher.product_publisher import ProductPublisher
 from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.orders.order_manager import OrderManager
 from app.core.analytics.sales_analytics import SalesAnalytics
+from app.core.campaigns.campaign_manager import CampaignManager
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -85,6 +86,13 @@ class Brain:
 
         self.sales_analytics = SalesAnalytics(
             self.order_manager,
+            memory,
+            logger
+        )
+
+        self.campaigns = CampaignManager(
+            self.store,
+            self.sales_analytics,
             memory,
             logger
         )
@@ -382,6 +390,24 @@ class Brain:
     def profit_report(self):
         return self.sales_analytics.profit_report()
 
+    def campaigns_all(self):
+        return self.campaigns.all()
+
+    def create_campaign(self, product_id, budget=10, channel="facebook_ads"):
+        return self.campaigns.create_campaign(product_id, budget, channel)
+
+    def create_best_campaign(self, budget=10, channel="facebook_ads"):
+        return self.campaigns.create_for_best_active_product(budget, channel)
+
+    def launch_campaign(self, campaign_id):
+        return self.campaigns.launch_campaign(campaign_id)
+
+    def pause_campaign(self, campaign_id):
+        return self.campaigns.pause_campaign(campaign_id)
+
+    def campaign_report(self):
+        return self.campaigns.campaign_report()
+
     def next_action(self):
         return self.decisions.next_action()
 
@@ -433,7 +459,8 @@ class Brain:
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
             "orders": self.orders_all(),
-            "sales_summary": self.sales_summary()
+            "sales_summary": self.sales_summary(),
+            "campaigns": self.campaigns_all()
         }
 
         prompt = f"""
