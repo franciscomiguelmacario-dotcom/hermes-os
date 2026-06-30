@@ -29,6 +29,7 @@ class CLI:
                         "restore-backup <filename>",
                         "snapshot",
                         "snapshots",
+                        "chat <texto>",
                         "restore-snapshot <filename>",
                         "business",
                         "set-business <key> <value>",
@@ -66,6 +67,11 @@ class CLI:
             if cmd.startswith("ask "):
                 text = cmd.replace("ask ", "", 1).strip()
                 self.logger.info(self.brain.handle_command(text))
+                continue
+
+            if cmd.startswith("chat "):
+                text = cmd.replace("chat ", "", 1).strip()
+                self.logger.info(self.brain.chat(text))
                 continue
 
             if cmd == "health":

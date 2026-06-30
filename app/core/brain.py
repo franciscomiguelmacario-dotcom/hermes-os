@@ -1,3 +1,4 @@
+from app.core.llm.ollama_client import OllamaClient
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -56,6 +57,7 @@ class Brain:
         self.business_cycle = BusinessCycle(self, logger)
         self.dashboard = DashboardEngine(self)
         self.command_center = CommandCenter(self, logger)
+        self.llm = OllamaClient()
 
         self.logger.info("Brain loaded")
 
@@ -181,6 +183,27 @@ class Brain:
 
     def handle_command(self, text):
         return self.command_center.handle(text)
+
+    def chat(self, text):
+        context = {
+            "business_profile": self.business_profile(),
+            "next_action": self.next_action(),
+            "tasks": self.tasks.all()
+        }
+
+        prompt = f"""
+Tu és o Hermes, um sistema tipo Jarvis para gerir um negócio de dropshipping.
+
+Contexto atual:
+{context}
+
+Pedido do utilizador:
+{text}
+
+Responde em português, de forma curta, prática e direta.
+"""
+
+        return self.llm.generate(prompt)
 
     def tick(self):
         self.scheduler.run(self.agents)
