@@ -23,6 +23,8 @@ class CLI:
                         "health",
                         "status",
                         "memory",
+                        "jarvis-mode",
+                        "jarvis-mode <cycles>",
                         "memory-key <key>",
                         "backup",
                         "backups",
@@ -109,6 +111,16 @@ class CLI:
 
             if cmd == "voice":
                 self.logger.info(self.brain.voice_config())
+                continue
+
+            if cmd.startswith("jarvis-mode"):
+                parts = cmd.split(" ")
+
+                cycles = 10
+                if len(parts) == 2:
+                    cycles = int(parts[1])
+
+                self.logger.info(self.brain.start_jarvis_mode(cycles=cycles))
                 continue
 
             if cmd.startswith("set-voice "):

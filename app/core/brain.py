@@ -1,3 +1,4 @@
+from app.core.voice.jarvis_mode import JarvisMode
 from app.core.voice.listen_engine import ListenEngine
 from app.core.voice.speech_engine import SpeechEngine
 from app.core.llm.ollama_client import OllamaClient
@@ -61,6 +62,7 @@ class Brain:
         self.command_center = CommandCenter(self, logger)
         self.speech = SpeechEngine(memory, logger)
         self.listener = ListenEngine(memory, logger)
+        self.jarvis_mode = JarvisMode(self, logger)
         self.llm = OllamaClient()
 
         self.logger.info("Brain loaded")
@@ -246,6 +248,9 @@ Responde em português, de forma curta, prática e direta.
             "heard": text,
             "result": result
         }
+
+    def start_jarvis_mode(self, cycles=10, seconds=5):
+        return self.jarvis_mode.start(cycles, seconds)
 
     def tick(self):
         self.scheduler.run(self.agents)

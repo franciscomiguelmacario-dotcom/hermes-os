@@ -11,11 +11,29 @@ class CommandCenter:
         text = text.lower().strip()
         text = unicodedata.normalize("NFKD", text)
         text = "".join(c for c in text if not unicodedata.combining(c))
-        return text
+
+        remove_words = [
+            "jarvis",
+            "hermes",
+            "por favor",
+            "faz favor",
+            "ok",
+            "olha"
+        ]
+
+        for word in remove_words:
+            text = text.replace(word, "")
+
+        return " ".join(text.split())
+
+    def has_any(self, text, words):
+        return any(word in text for word in words)
 
     def handle(self, text):
         original = text.strip()
         cmd = self.normalize(original)
+
+        self.save_voice_debug(original, cmd)
 
         if not cmd:
             return {
@@ -23,50 +41,76 @@ class CommandCenter:
                 "message": "empty command"
             }
 
-        if cmd in ["ajuda", "help", "comandos"]:
+        if self.has_any(cmd, ["ajuda", "help", "comandos", "o que podes fazer"]):
             return self.help()
 
-        if "estado" in cmd or "saude" in cmd or "health" in cmd:
+        if self.has_any(cmd, ["estado", "saude", "sistema", "status", "health"]):
             return self.brain.health_check()
 
-        if "dashboard" in cmd:
+        if self.has_any(cmd, ["abre dashboard", "abrir dashboard", "dashboard", "painel"]):
             return {
                 "status": "dashboard_available",
                 "action": "python hermes.py dashboard",
                 "url": "http://127.0.0.1:5000"
             }
 
-        if "perfil" in cmd or "negocio" in cmd or "business" in cmd:
-            return self.brain.business_profile()
+        if self.has_any(cmd, ["perfil", "negocio", "business", "loja"]):
+            if not self.has_any(cmd, ["criar", "cria", "tarefa", "task"]):
+                return self.brain.business_profile()
 
-        if "proxima acao" in cmd or "next action" in cmd:
+        if self.has_any(cmd, ["proxima acao", "proxima ação", "next action", "o que faco", "o que faço"]):
             return self.brain.next_action()
 
-        if "autopilot cycle" in cmd or "ciclo autopilot" in cmd:
+        if self.has_any(cmd, [
+            "autopilot cycle",
+            "ciclo autopilot",
+            "ciclo automatico",
+            "ciclo automatico",
+            "piloto automatico ciclo",
+            "executa ciclo"
+        ]):
             return self.brain.autopilot_cycle(5)
 
-        if "autopilot" in cmd or "autopiloto" in cmd:
+        if self.has_any(cmd, [
+            "autopilot",
+            "autopiloto",
+            "piloto automatico",
+            "piloto automatico",
+            "executa automatico"
+        ]):
             return self.brain.autopilot_once()
 
-        if "business cycle" in cmd or "ciclo negocio" in cmd or "ciclo do negocio" in cmd:
+        if self.has_any(cmd, [
+            "business cycle",
+            "ciclo negocio",
+            "ciclo do negocio",
+            "ciclo da loja",
+            "ciclo dropshipping"
+        ]):
             return self.brain.run_business_cycle()
 
-        if "workflow dropshipping" in cmd or "inicia dropshipping" in cmd:
+        if self.has_any(cmd, [
+            "workflow dropshipping",
+            "inicia dropshipping",
+            "começar dropshipping",
+            "comecar dropshipping",
+            "executar dropshipping"
+        ]):
             return self.brain.run_workflow("dropshipping")
 
-        if "relatorio" in cmd or "report" in cmd:
+        if self.has_any(cmd, ["relatorio", "relatório", "report", "resumo"]):
             return self.brain.report()
 
-        if "exportar obsidian" in cmd or "export obsidian" in cmd:
+        if self.has_any(cmd, ["exportar obsidian", "export obsidian", "guardar obsidian", "enviar obsidian"]):
             return self.brain.export_obsidian_report()
 
-        if "backup" in cmd:
+        if self.has_any(cmd, ["backup", "copia seguranca", "cópia segurança"]):
             return self.brain.create_backup()
 
-        if "limpar tarefas" in cmd or "clear tasks" in cmd:
+        if self.has_any(cmd, ["limpar tarefas", "apagar tarefas", "clear tasks", "limpa tarefas"]):
             return self.brain.clear_tasks()
 
-        if "tarefas" in cmd or "tasks" in cmd:
+        if self.has_any(cmd, ["mostrar tarefas", "mostra tarefas", "ver tarefas", "tarefas", "tasks"]):
             return self.brain.tasks.all()
 
         task_title = self.extract_task(original)
@@ -90,10 +134,16 @@ class CommandCenter:
             "criar tarefa para",
             "nova tarefa para",
             "adicionar tarefa para",
+            "adiciona tarefa para",
+            "mete tarefa para",
+            "faz tarefa para",
             "cria tarefa",
             "criar tarefa",
             "nova tarefa",
-            "adicionar tarefa"
+            "adicionar tarefa",
+            "adiciona tarefa",
+            "mete tarefa",
+            "faz tarefa"
         ]
 
         for trigger in triggers:
@@ -101,10 +151,19 @@ class CommandCenter:
 
             if index >= 0:
                 start = index + len(trigger)
-                title = text[start:].strip(" :-,")
+                title = normalized[start:].strip(" :-,")
 
                 if title:
                     return title
+
+        if "produto vencedor" in normalized:
+            return "pesquisar produto vencedor"
+
+        if "campanha" in normalized or "anuncio" in normalized or "anuncio" in normalized:
+            return "criar campanha ads para produto vencedor"
+
+        if "fornecedor" in normalized:
+            return "encontrar fornecedor com envio rapido"
 
         return None
 
@@ -113,45 +172,67 @@ class CommandCenter:
 
         mapping = {
             "nome da loja": "store_name",
+            "nome loja": "store_name",
             "store name": "store_name",
             "nicho": "niche",
             "niche": "niche",
             "orcamento": "budget",
+            "orçamento": "budget",
             "budget": "budget",
             "moeda": "currency",
             "currency": "currency"
         }
 
+        starters = [
+            "definir",
+            "define",
+            "guardar",
+            "guarda",
+            "mudar",
+            "muda",
+            "set"
+        ]
+
         for phrase, key in mapping.items():
-            if phrase in normalized:
+            if phrase in normalized and self.has_any(normalized, starters):
                 index = normalized.find(phrase)
                 start = index + len(phrase)
-                value = text[start:].strip(" :-,")
+                value = normalized[start:].strip(" :-,como")
 
                 if value:
                     return key, value
 
         return None
 
+    def save_voice_debug(self, original, normalized):
+        history = self.brain.memory.get("voice_command_history", [])
+
+        history.append({
+            "original": original,
+            "normalized": normalized
+        })
+
+        history = history[-20:]
+        self.brain.memory.set("voice_command_history", history)
+
     def help(self):
         return {
             "commands": [
-                "jarvis mostra o estado",
-                "jarvis abre o dashboard",
-                "jarvis mostra o perfil do negócio",
-                "jarvis qual é a próxima ação",
-                "jarvis executa autopilot",
-                "jarvis executa autopilot cycle",
-                "jarvis inicia workflow dropshipping",
-                "jarvis cria tarefa pesquisar produto vencedor",
-                "jarvis mostra tarefas",
-                "jarvis limpar tarefas",
-                "jarvis gerar relatório",
-                "jarvis exportar obsidian",
-                "jarvis fazer backup",
-                "jarvis definir nome da loja Hermes Store",
-                "jarvis definir nicho gadgets",
-                "jarvis definir orçamento 100",
-                "jarvis o que achas do negócio?"
+                "mostra o estado",
+                "abre o dashboard",
+                "mostra o perfil do negócio",
+                "qual é a próxima ação",
+                "executa autopilot",
+                "executa autopilot cycle",
+                "inicia workflow dropshipping",
+                "cria tarefa pesquisar produto vencedor",
+                "mostra tarefas",
+                "limpa tarefas",
+                "gerar relatório",
+                "exportar obsidian",
+                "fazer backup",
+                "definir nome da loja Hermes Store",
+                "definir nicho gadgets",
+                "definir orçamento 100"
             ]
         }
