@@ -1,11 +1,21 @@
-from flask import Flask, jsonify
+import threading
+import time
+
+from flask import Flask, jsonify, request
 
 from app.core.startup import Hermes
-
 
 def create_app():
     hermes = Hermes()
     hermes.kernel.boot()
+
+    def background_loop():
+        while True:
+            hermes.kernel.run_tick()
+            time.sleep(1)
+
+    worker = threading.Thread(target=background_loop, daemon=True)
+    worker.start()
 
     app = Flask(__name__)
 
@@ -48,12 +58,21 @@ def create_app():
             overflow: auto;
         }
 
-        button {
+        button, input {
             padding: 10px 14px;
             border-radius: 8px;
             border: none;
-            cursor: pointer;
             margin: 4px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        input {
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
         }
     </style>
 </head>
@@ -67,6 +86,21 @@ def create_app():
     <button onclick="runAction('/api/action/export-obsidian')">Export Obsidian</button>
     <button onclick="runAction('/api/action/backup')">Backup</button>
     <button onclick="runAction('/api/action/clear-tasks')">Clear Tasks</button>
+
+    <div class="card" style="margin-top: 25px;">
+        <h2>Business Profile</h2>
+        <input id="store_name" placeholder="Store name">
+        <input id="niche" placeholder="Niche">
+        <input id="budget" placeholder="Budget">
+        <input id="currency" placeholder="Currency" value="EUR">
+        <button onclick="saveBusiness()">Save Business</button>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+        <h2>Create Task</h2>
+        <input id="task_title" placeholder="Task title" style="width: 60%;">
+        <button onclick="createTask()">Create Task</button>
+    </div>
 
     <div class="grid">
         <div class="card">
@@ -129,6 +163,43 @@ def create_app():
             await loadDashboard();
         }
 
+        async function saveBusiness() {
+            const payload = {
+                store_name: document.getElementById("store_name").value,
+                niche: document.getElementById("niche").value,
+                budget: document.getElementById("budget").value,
+                currency: document.getElementById("currency").value
+            };
+
+            const response = await fetch("/api/action/set-business", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+
+            await loadDashboard();
+        }
+
+        async function createTask() {
+            const payload = {
+                title: document.getElementById("task_title").value
+            };
+
+            const response = await fetch("/api/action/create-task", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+
+            await loadDashboard();
+        }
+
         loadDashboard();
     </script>
 </body>
@@ -170,6 +241,36 @@ def create_app():
     @app.route("/api/action/clear-tasks", methods=["POST"])
     def action_clear_tasks():
         return jsonify(hermes.brain.clear_tasks())
+
+    @app.route("/api/action/set-business", methods=["POST"])
+    def action_set_business():
+        data = request.get_json(silent=True) or {}
+
+        for key in ["store_name", "niche", "budget", "currency"]:
+            value = data.get(key)
+            if value is not None and str(value).strip() != "":
+                hermes.brain.set_business_value(key, str(value).strip())
+
+        return jsonify({
+            "status": "business_saved",
+            "business_profile": hermes.brain.business_profile()
+        })
+
+    @app.route("/api/action/create-task", methods=["POST"])
+    def action_create_task():
+        data = request.get_json(silent=True) or {}
+        title = str(data.get("title", "")).strip()
+
+        if not title:
+            return jsonify({
+                "status": "error",
+                "message": "task title is required"
+            }), 400
+
+        return jsonify({
+            "status": "task_created",
+            "task": hermes.brain.create_task(title)
+        })
 
     return app
 
