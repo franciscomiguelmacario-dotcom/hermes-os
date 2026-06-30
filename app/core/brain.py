@@ -447,6 +447,15 @@ class Brain:
     def campaign_report(self):
         return self.campaigns.campaign_report()
 
+    def store_autopilot_config(self):
+        return self.store_autopilot.config()
+
+    def set_store_autopilot_config(self, key, value):
+        return self.store_autopilot.set_config_value(key, value)
+
+    def store_autopilot_safety(self, requested_budget=0):
+        return self.store_autopilot.safety_check(requested_budget)
+
     def run_store_autopilot(
         self,
         margin_percent=40,
@@ -517,7 +526,8 @@ class Brain:
             "orders": self.orders_all(),
             "sales_summary": self.sales_summary(),
             "campaigns": self.campaigns_all(),
-            "campaign_performance": self.campaign_performance()
+            "campaign_performance": self.campaign_performance(),
+            "store_autopilot_config": self.store_autopilot_config()
         }
 
         prompt = f"""

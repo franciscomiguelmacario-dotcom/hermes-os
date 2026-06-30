@@ -50,6 +50,9 @@ class CLI:
                         "optimize-campaigns",
                         "campaign-performance",
                         "campaign-report",
+                        "store-autopilot-config",
+                        "set-store-autopilot <key> <value>",
+                        "store-autopilot-safety <budget>",
                         "store-autopilot <margin> | <budget> | <channel> | <tracking_prefix>",
                         "store-autopilot-history",
                         "report",
@@ -284,6 +287,33 @@ class CLI:
 
             if cmd == "campaign-report":
                 self.logger.info(self.brain.campaign_report())
+                continue
+
+            if cmd == "store-autopilot-config":
+                self.logger.info(self.brain.store_autopilot_config())
+                continue
+
+            if cmd.startswith("set-store-autopilot "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-store-autopilot <key> <value>")
+                    continue
+
+                _, key, value = parts
+
+                self.logger.info(
+                    self.brain.set_store_autopilot_config(key, value)
+                )
+                continue
+
+            if cmd.startswith("store-autopilot-safety"):
+                parts = cmd.split(" ")
+                budget = parts[1] if len(parts) > 1 else 0
+
+                self.logger.info(
+                    self.brain.store_autopilot_safety(budget)
+                )
                 continue
 
             if cmd.startswith("store-autopilot"):
