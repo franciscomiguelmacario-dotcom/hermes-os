@@ -1,3 +1,6 @@
+import json
+
+
 class CLI:
 
     def __init__(self, brain, logger):
@@ -30,6 +33,9 @@ class CLI:
                         "supplier",
                         "supplier-api",
                         "set-supplier-api <key> <value>",
+                        "import-test-order <product_id> | <customer_name> | <customer_email> | <quantity>",
+                        "import-order-json <provider> | <json_payload>",
+                        "order-intake-history",
                         "submit-order-supplier <order_id>",
                         "submit-pending-orders-supplier",
                         "mark-supplier-tracking <order_id> | <tracking_number>",
@@ -159,6 +165,55 @@ class CLI:
                 self.logger.info(
                     self.brain.set_supplier_api_config(key, value)
                 )
+                continue
+
+            if cmd.startswith("import-test-order"):
+                raw = cmd.replace("import-test-order", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|") if p.strip()]
+
+                product_id = parts[0] if len(parts) > 0 else 1
+                customer_name = parts[1] if len(parts) > 1 else "Cliente Teste"
+                customer_email = parts[2] if len(parts) > 2 else "teste@email.com"
+                quantity = parts[3] if len(parts) > 3 else 1
+
+                self.logger.info(
+                    self.brain.import_test_order(
+                        product_id,
+                        customer_name,
+                        customer_email,
+                        quantity
+                    )
+                )
+                continue
+
+            if cmd.startswith("import-order-json "):
+                raw = cmd.replace("import-order-json ", "", 1).strip()
+                parts = raw.split("|", 1)
+
+                if len(parts) < 2:
+                    self.logger.info(
+                        "usage: import-order-json <provider> | <json_payload>"
+                    )
+                    continue
+
+                provider = parts[0].strip()
+                payload_text = parts[1].strip()
+
+                try:
+                    payload = json.loads(payload_text)
+                    self.logger.info(
+                        self.brain.import_order(payload, provider)
+                    )
+                except Exception as error:
+                    self.logger.info({
+                        "status": "error",
+                        "message": str(error)
+                    })
+
+                continue
+
+            if cmd == "order-intake-history":
+                self.logger.info(self.brain.order_intake_history())
                 continue
 
             if cmd.startswith("submit-order-supplier "):

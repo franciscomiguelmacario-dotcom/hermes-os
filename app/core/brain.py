@@ -28,6 +28,7 @@ from app.core.importer.product_importer import ProductImporter
 from app.core.publisher.product_publisher import ProductPublisher
 from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.orders.order_manager import OrderManager
+from app.core.orders.order_intake import OrderIntake
 from app.core.analytics.sales_analytics import SalesAnalytics
 from app.core.campaigns.campaign_manager import CampaignManager
 from app.core.notifications.notification_center import NotificationCenter
@@ -108,6 +109,14 @@ class Brain:
         )
 
         self.notifications = NotificationCenter(
+            memory,
+            logger
+        )
+
+        self.order_intake = OrderIntake(
+            self.order_manager,
+            self.store,
+            self.notifications,
             memory,
             logger
         )
@@ -331,6 +340,35 @@ class Brain:
 
     def set_supplier_api_config(self, key, value):
         return self.supplier_api.set_config_value(key, value)
+
+    def import_order(self, payload, provider="custom"):
+        return self.order_intake.import_order(payload, provider)
+
+    def import_test_order(
+        self,
+        product_id=1,
+        customer_name="Cliente Teste",
+        customer_email="teste@email.com",
+        quantity=1
+    ):
+        payload = {
+            "id": f"TEST-{product_id}",
+            "product_id": product_id,
+            "quantity": quantity,
+            "customer_name": customer_name,
+            "customer_email": customer_email,
+            "shipping_address": {
+                "address1": "Rua Teste 1",
+                "city": "Lisboa",
+                "country": "Portugal",
+                "postal_code": "1000-000"
+            }
+        }
+
+        return self.order_intake.import_order(payload, "custom")
+
+    def order_intake_history(self):
+        return self.order_intake.history()
 
     def submit_order_to_supplier(self, order_id):
         return self.fulfillment_pipeline.submit_order(order_id)
@@ -707,6 +745,7 @@ class Brain:
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
             "orders": self.orders_all(),
+            "order_intake_history": self.order_intake_history(),
             "sales_summary": self.sales_summary(),
             "campaigns": self.campaigns_all(),
             "campaign_performance": self.campaign_performance(),
