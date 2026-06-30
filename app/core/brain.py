@@ -1,3 +1,4 @@
+from app.core.voice.speech_engine import SpeechEngine
 from app.core.llm.ollama_client import OllamaClient
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
@@ -57,6 +58,7 @@ class Brain:
         self.business_cycle = BusinessCycle(self, logger)
         self.dashboard = DashboardEngine(self)
         self.command_center = CommandCenter(self, logger)
+        self.speech = SpeechEngine(memory, logger)
         self.llm = OllamaClient()
 
         self.logger.info("Brain loaded")
@@ -204,6 +206,20 @@ Responde em português, de forma curta, prática e direta.
 """
 
         return self.llm.generate(prompt)
+
+    def speak(self, text):
+        return self.speech.speak(text)
+
+    def voice_config(self):
+        return self.speech.config()
+
+    def set_voice_value(self, key, value):
+        return self.speech.set_value(key, value)
+
+    def handle_command_voice(self, text):
+        result = self.handle_command(text)
+        self.speak(result)
+        return result
 
     def tick(self):
         self.scheduler.run(self.agents)

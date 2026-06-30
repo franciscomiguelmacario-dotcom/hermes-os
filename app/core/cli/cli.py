@@ -32,11 +32,15 @@ class CLI:
                         "chat <texto>",
                         "restore-snapshot <filename>",
                         "business",
+                        "voice",
+                        "set-voice <key> <value>",
                         "set-business <key> <value>",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
                         "workflows",
+                        "say <texto>",
+                        "jarvis-say <texto>",
                         "workflow dropshipping",
                         "next-action",
                         "autopilot",
@@ -62,6 +66,31 @@ class CLI:
             if cmd.startswith("jarvis "):
                 text = cmd.replace("jarvis ", "", 1).strip()
                 self.logger.info(self.brain.handle_command(text))
+                continue
+
+            if cmd.startswith("jarvis-say "):
+                text = cmd.replace("jarvis-say ", "", 1).strip()
+                self.logger.info(self.brain.handle_command_voice(text))
+                continue
+
+            if cmd.startswith("say "):
+                text = cmd.replace("say ", "", 1).strip()
+                self.logger.info(self.brain.speak(text))
+                continue
+
+            if cmd == "voice":
+                self.logger.info(self.brain.voice_config())
+                continue
+
+            if cmd.startswith("set-voice "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-voice <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_voice_value(key, value))
                 continue
 
             if cmd.startswith("ask "):
