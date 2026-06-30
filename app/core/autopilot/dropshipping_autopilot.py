@@ -12,7 +12,8 @@ class DropshippingAutopilot:
         memory,
         logger=None,
         notifications=None,
-        customer_support=None
+        customer_support=None,
+        fulfillment_pipeline=None
     ):
         self.launch_pipeline = launch_pipeline
         self.campaign_manager = campaign_manager
@@ -22,6 +23,7 @@ class DropshippingAutopilot:
         self.logger = logger
         self.notifications = notifications
         self.customer_support = customer_support
+        self.fulfillment_pipeline = fulfillment_pipeline
 
     def config(self):
         default = {
@@ -34,6 +36,7 @@ class DropshippingAutopilot:
             "allow_campaign_launch": True,
             "allow_campaign_simulation": True,
             "allow_campaign_optimization": True,
+            "allow_supplier_submission": True,
             "allow_auto_fulfillment": True,
             "allow_support_auto_reply": True,
             "allow_send_notifications": True
@@ -258,20 +261,21 @@ class DropshippingAutopilot:
             "result": optimization
         })
 
-        if config.get("allow_auto_fulfillment"):
-            fulfillment = self.order_manager.auto_fulfill_pending(
-                tracking_prefix
-            )
-            self.create_shipping_notifications(fulfillment)
+        if (
+            config.get("allow_supplier_submission")
+            and config.get("allow_auto_fulfillment")
+            and self.fulfillment_pipeline
+        ):
+            supplier_submission = self.fulfillment_pipeline.submit_pending_orders()
         else:
-            fulfillment = {
+            supplier_submission = {
                 "status": "skipped",
-                "message": "auto fulfillment disabled"
+                "message": "supplier submission disabled or fulfillment pipeline unavailable"
             }
 
         steps.append({
-            "step": "auto_fulfill_orders",
-            "result": fulfillment
+            "step": "submit_pending_orders_to_supplier",
+            "result": supplier_submission
         })
 
         if (
@@ -342,16 +346,6 @@ class DropshippingAutopilot:
                     campaign,
                     item.get("action"),
                     item.get("reason")
-                )
-
-    def create_shipping_notifications(self, fulfillment):
-        if not self.notifications:
-            return
-
-        for item in fulfillment.get("batch", {}).get("results", []):
-            if item.get("status") == "order_fulfilled":
-                self.notifications.shipping_confirmation(
-                    item.get("order")
                 )
 
     def save_cycle(self, cycle):

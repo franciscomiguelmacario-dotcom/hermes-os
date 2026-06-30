@@ -135,7 +135,8 @@ class Brain:
             memory,
             logger,
             self.notifications,
-            self.customer_support
+            self.customer_support,
+            self.fulfillment_pipeline
         )
 
         self.decisions = DecisionEngine(memory, self.tasks)
@@ -483,13 +484,7 @@ class Brain:
         return result
 
     def auto_fulfill_orders(self, tracking_prefix="HER"):
-        result = self.order_manager.auto_fulfill_pending(tracking_prefix)
-
-        for item in result.get("batch", {}).get("results", []):
-            if item.get("status") == "order_fulfilled":
-                self.notifications.shipping_confirmation(item.get("order"))
-
-        return result
+        return self.submit_pending_orders_to_supplier()
 
     def fulfillment_history(self):
         return self.order_manager.fulfillment_history()
