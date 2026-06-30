@@ -3,7 +3,14 @@ from datetime import datetime
 
 class OrderIntake:
 
-    def __init__(self, order_manager, store, notifications=None, memory=None, logger=None):
+    def __init__(
+        self,
+        order_manager,
+        store,
+        notifications=None,
+        memory=None,
+        logger=None
+    ):
         self.order_manager = order_manager
         self.store = store
         self.notifications = notifications
@@ -128,6 +135,24 @@ class OrderIntake:
 
         return None
 
+    def safe_quantity(self, value):
+        try:
+            quantity = int(value)
+        except Exception:
+            quantity = 1
+
+        if quantity < 1:
+            quantity = 1
+
+        return quantity
+
+    def get_product(self, product_id):
+        for product in self.store.products():
+            if str(product.get("id")) == str(product_id):
+                return product
+
+        return None
+
     def find_product(self, item):
         product_id = item.get("product_id")
 
@@ -157,10 +182,21 @@ class OrderIntake:
 
         return None
 
-    def get_product(self, product_id):
-        for product in self.store.products():
-            if str(product.get("id")) == str(product_id):
-                return product
+    def find_existing_external_order(self, external_order_id, provider):
+        if not external_order_id:
+            return None
+
+        for order in self.order_manager.all():
+            same_external_id = (
+                str(order.get("external_order_id")) == str(external_order_id)
+            )
+
+            same_provider = (
+                str(order.get("order_source")) == str(provider)
+            )
+
+            if same_external_id and same_provider:
+                return order
 
         return None
 
@@ -170,6 +206,28 @@ class OrderIntake:
         if normalized.get("status") == "error":
             self.record_history("import_order_error", normalized)
             return normalized
+
+        external_order_id = normalized.get("external_order_id")
+        provider = normalized.get("provider")
+
+        existing_order = self.find_existing_external_order(
+            external_order_id,
+            provider
+        )
+
+        if existing_order:
+            duplicate_result = {
+                "status": "duplicate_order_skipped",
+                "created_at": datetime.now().isoformat(),
+                "provider": provider,
+                "external_order_id": external_order_id,
+                "existing_order": existing_order,
+                "message": "Webhook repetido ignorado. Encomenda já existe."
+            }
+
+            self.record_history("duplicate_order_skipped", duplicate_result)
+
+            return duplicate_result
 
         results = []
 
@@ -190,7 +248,7 @@ class OrderIntake:
                 product.get("id"),
                 normalized.get("customer_name"),
                 normalized.get("customer_email"),
-                item.get("quantity", 1)
+                self.safe_quantity(item.get("quantity", 1))
             )
 
             if created.get("status") == "order_created":
@@ -199,13 +257,13 @@ class OrderIntake:
                 self.order_manager.update_order(
                     order.get("id"),
                     "external_order_id",
-                    normalized.get("external_order_id")
+                    external_order_id
                 )
 
                 self.order_manager.update_order(
                     order.get("id"),
                     "order_source",
-                    normalized.get("provider")
+                    provider
                 )
 
                 self.order_manager.update_order(
@@ -220,6 +278,12 @@ class OrderIntake:
                     normalized.get("raw")
                 )
 
+                self.order_manager.update_order(
+                    order.get("id"),
+                    "intake_received_at",
+                    datetime.now().isoformat()
+                )
+
                 updated_order = self.order_manager.get_order(order.get("id"))
 
                 if self.notifications:
@@ -232,8 +296,8 @@ class OrderIntake:
         imported = {
             "status": "order_intake_processed",
             "created_at": datetime.now().isoformat(),
-            "provider": normalized.get("provider"),
-            "external_order_id": normalized.get("external_order_id"),
+            "provider": provider,
+            "external_order_id": external_order_id,
             "orders_created": len([
                 result for result in results
                 if result.get("status") == "order_created"
