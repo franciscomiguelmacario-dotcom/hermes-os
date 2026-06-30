@@ -1,11 +1,12 @@
 class ProductLaunchPipeline:
 
-    def __init__(self, importer, publisher, supplier, memory, logger=None):
+    def __init__(self, importer, publisher, supplier, memory, logger=None, scoring=None):
         self.importer = importer
         self.publisher = publisher
         self.supplier = supplier
         self.memory = memory
         self.logger = logger
+        self.scoring = scoring
 
     def launch_from_supplier_product(self, supplier_product_id, margin_percent=None):
         imported = self.importer.import_supplier_product(
@@ -57,6 +58,38 @@ class ProductLaunchPipeline:
             first["id"],
             margin_percent
         )
+
+    def launch_best_product(self, margin_percent=None):
+        if not self.scoring:
+            return {
+                "status": "error",
+                "message": "scoring engine not available"
+            }
+
+        best_result = self.scoring.best_product()
+
+        if best_result.get("status") != "best_product_selected":
+            return best_result
+
+        best = best_result.get("best", {})
+        product = best.get("product")
+
+        if not product:
+            return {
+                "status": "error",
+                "message": "best product not found"
+            }
+
+        launched = self.launch_from_supplier_product(
+            product["id"],
+            margin_percent
+        )
+
+        return {
+            "status": "best_product_launched",
+            "score": best,
+            "launch": launched
+        }
 
     def history(self):
         return self.memory.get("product_launch_history", [])

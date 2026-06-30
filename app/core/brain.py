@@ -71,7 +71,8 @@ class Brain:
             self.publisher,
             self.supplier,
             memory,
-            logger
+            logger,
+            self.scoring
         )
 
         self.decisions = DecisionEngine(memory, self.tasks)
@@ -302,6 +303,9 @@ class Brain:
             keyword,
             margin_percent
         )
+
+    def launch_best_product(self, margin_percent=None):
+        return self.launch_pipeline.launch_best_product(margin_percent)
 
     def product_launch_history(self):
         return self.launch_pipeline.history()

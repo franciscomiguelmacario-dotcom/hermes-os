@@ -1,4 +1,3 @@
-
 class CLI:
 
     def __init__(self, brain, logger):
@@ -20,57 +19,52 @@ class CLI:
                     "commands": [
                         "help",
                         "jarvis <texto>",
-                        "store",
-                        "set-store <key> <value>",
-                        "products",
-                        "create-product <title> | <price> | <cost>",
-                        "update-product <id> <key> <value>",
-                        "delete-product <id>",
-                        "pricing",
-                        "set-pricing <key> <value>",
-                        "price <cost> <shipping> <margin_percent>",
-                        "score-suppliers",
-                        "best-supplier-product",
-                        "supplier",
-                        "product <id>",
-                        "publish-product <id>",
-                        "unpublish-product <id>",
-                        "publish-history",
-                        "set-supplier <key> <value>",
-                        "supplier-products",
-                        "import-product <supplier_product_id> <margin_percent>",
-                        "import-product-search <keyword> | <margin_percent>",
-                        "import-history",
-                        "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
-                        "search-supplier <keyword>",
-                        "delete-supplier-product <id>",
-                        "launch-product <supplier_product_id> <margin_percent>",
-                        "launch-product-search <keyword> | <margin_percent>",
-                        "launch-history",
                         "ask <texto>",
+                        "chat <texto>",
                         "health",
                         "status",
                         "memory",
-                        "jarvis-mode",
-                        "jarvis-mode <cycles>",
                         "memory-key <key>",
                         "backup",
                         "backups",
                         "restore-backup <filename>",
                         "snapshot",
                         "snapshots",
-                        "chat <texto>",
                         "restore-snapshot <filename>",
                         "business",
-                        "voice",
-                        "set-voice <key> <value>",
                         "set-business <key> <value>",
+                        "store",
+                        "set-store <key> <value>",
+                        "supplier",
+                        "set-supplier <key> <value>",
+                        "supplier-products",
+                        "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
+                        "search-supplier <keyword>",
+                        "delete-supplier-product <id>",
+                        "score-suppliers",
+                        "best-supplier-product",
+                        "pricing",
+                        "set-pricing <key> <value>",
+                        "price <cost> <shipping> <margin_percent>",
+                        "products",
+                        "create-product <title> | <price> | <cost>",
+                        "product <id>",
+                        "update-product <id> <key> <value>",
+                        "delete-product <id>",
+                        "import-product <supplier_product_id> <margin_percent>",
+                        "import-product-search <keyword> | <margin_percent>",
+                        "import-history",
+                        "publish-product <id>",
+                        "unpublish-product <id>",
+                        "publish-history",
+                        "launch-product <supplier_product_id> <margin_percent>",
+                        "launch-product-search <keyword> | <margin_percent>",
+                        "launch-best-product <margin_percent>",
+                        "launch-history",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
                         "workflows",
-                        "say <texto>",
-                        "jarvis-say <texto>",
                         "workflow dropshipping",
                         "next-action",
                         "autopilot",
@@ -80,13 +74,19 @@ class CLI:
                         "dashboard",
                         "report",
                         "export-report",
+                        "export-report-md",
+                        "export-obsidian",
+                        "set-obsidian-path <path>",
+                        "voice",
+                        "set-voice <key> <value>",
+                        "say <texto>",
+                        "jarvis-say <texto>",
                         "listen",
                         "jarvis-listen",
                         "listen-config",
                         "set-listen <key> <value>",
-                        "export-report-md",
-                        "export-obsidian",
-                        "set-obsidian-path <path>",
+                        "jarvis-mode",
+                        "jarvis-mode <cycles>",
                         "learn",
                         "patterns",
                         "history <agent>",
@@ -102,6 +102,16 @@ class CLI:
                 self.logger.info(self.brain.handle_command(text))
                 continue
 
+            if cmd.startswith("ask "):
+                text = cmd.replace("ask ", "", 1).strip()
+                self.logger.info(self.brain.handle_command(text))
+                continue
+
+            if cmd.startswith("chat "):
+                text = cmd.replace("chat ", "", 1).strip()
+                self.logger.info(self.brain.chat(text))
+                continue
+
             if cmd.startswith("jarvis-say "):
                 text = cmd.replace("jarvis-say ", "", 1).strip()
                 self.logger.info(self.brain.handle_command_voice(text))
@@ -110,6 +120,21 @@ class CLI:
             if cmd.startswith("say "):
                 text = cmd.replace("say ", "", 1).strip()
                 self.logger.info(self.brain.speak(text))
+                continue
+
+            if cmd == "voice":
+                self.logger.info(self.brain.voice_config())
+                continue
+
+            if cmd.startswith("set-voice "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-voice <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_voice_value(key, value))
                 continue
 
             if cmd == "listen-config":
@@ -137,10 +162,6 @@ class CLI:
                 self.logger.info(self.brain.listen_and_handle())
                 continue
 
-            if cmd == "voice":
-                self.logger.info(self.brain.voice_config())
-                continue
-
             if cmd.startswith("jarvis-mode"):
                 parts = cmd.split(" ")
 
@@ -149,27 +170,6 @@ class CLI:
                     cycles = int(parts[1])
 
                 self.logger.info(self.brain.start_jarvis_mode(cycles=cycles))
-                continue
-
-            if cmd.startswith("set-voice "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-voice <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_voice_value(key, value))
-                continue
-
-            if cmd.startswith("ask "):
-                text = cmd.replace("ask ", "", 1).strip()
-                self.logger.info(self.brain.handle_command(text))
-                continue
-
-            if cmd.startswith("chat "):
-                text = cmd.replace("chat ", "", 1).strip()
-                self.logger.info(self.brain.chat(text))
                 continue
 
             if cmd == "health":
@@ -235,31 +235,19 @@ class CLI:
                 self.logger.info(self.brain.set_business_value(key, value))
                 continue
 
-            if cmd == "pricing":
-                self.logger.info(self.brain.pricing_config())
+            if cmd == "store":
+                self.logger.info(self.brain.store_config())
                 continue
 
-            if cmd.startswith("set-pricing "):
+            if cmd.startswith("set-store "):
                 parts = cmd.split(" ", 2)
 
                 if len(parts) < 3:
-                    self.logger.info("usage: set-pricing <key> <value>")
+                    self.logger.info("usage: set-store <key> <value>")
                     continue
 
                 _, key, value = parts
-                self.logger.info(self.brain.set_pricing_value(key, value))
-                continue
-
-            if cmd.startswith("price "):
-                parts = cmd.split(" ")
-
-                cost = parts[1] if len(parts) > 1 else 0
-                shipping = parts[2] if len(parts) > 2 else 0
-                margin = parts[3] if len(parts) > 3 else None
-
-                self.logger.info(
-                    self.brain.calculate_price(cost, shipping, margin)
-                )
+                self.logger.info(self.brain.set_store_value(key, value))
                 continue
 
             if cmd == "supplier":
@@ -312,27 +300,48 @@ class CLI:
                 self.logger.info(self.brain.delete_supplier_product(product_id))
                 continue
 
-            if cmd == "store":
-                self.logger.info(self.brain.store_config())
-                continue
-
-            if cmd.startswith("set-store "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-store <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_store_value(key, value))
-                continue
-
             if cmd == "score-suppliers":
                 self.logger.info(self.brain.score_supplier_products())
                 continue
 
             if cmd == "best-supplier-product":
                 self.logger.info(self.brain.best_supplier_product())
+                continue
+
+            if cmd == "pricing":
+                self.logger.info(self.brain.pricing_config())
+                continue
+
+            if cmd.startswith("set-pricing "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-pricing <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_pricing_value(key, value))
+                continue
+
+            if cmd.startswith("price "):
+                parts = cmd.split(" ")
+
+                cost = parts[1] if len(parts) > 1 else 0
+                shipping = parts[2] if len(parts) > 2 else 0
+                margin = parts[3] if len(parts) > 3 else None
+
+                self.logger.info(
+                    self.brain.calculate_price(cost, shipping, margin)
+                )
+                continue
+
+            if cmd.startswith("launch-best-product"):
+                parts = cmd.split(" ")
+                margin = parts[1] if len(parts) > 1 else None
+
+                self.logger.info(
+                    self.brain.launch_best_product(margin)
+                )
                 continue
 
             if cmd.startswith("launch-product-search "):
