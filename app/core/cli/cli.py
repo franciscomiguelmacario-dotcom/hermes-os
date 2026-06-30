@@ -50,6 +50,10 @@ class CLI:
                         "optimize-campaigns",
                         "campaign-performance",
                         "campaign-report",
+                        "notifications",
+                        "pending-notifications",
+                        "send-notifications",
+                        "notification-batches",
                         "store-autopilot-config",
                         "set-store-autopilot <key> <value>",
                         "store-autopilot-safety <budget>",
@@ -287,6 +291,22 @@ class CLI:
 
             if cmd == "campaign-report":
                 self.logger.info(self.brain.campaign_report())
+                continue
+
+            if cmd == "notifications":
+                self.logger.info(self.brain.notifications_all())
+                continue
+
+            if cmd == "pending-notifications":
+                self.logger.info(self.brain.pending_notifications())
+                continue
+
+            if cmd == "send-notifications":
+                self.logger.info(self.brain.send_notifications())
+                continue
+
+            if cmd == "notification-batches":
+                self.logger.info(self.brain.notification_batches())
                 continue
 
             if cmd == "store-autopilot-config":

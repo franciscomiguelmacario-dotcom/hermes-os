@@ -27,6 +27,7 @@ from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.orders.order_manager import OrderManager
 from app.core.analytics.sales_analytics import SalesAnalytics
 from app.core.campaigns.campaign_manager import CampaignManager
+from app.core.notifications.notification_center import NotificationCenter
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -94,6 +95,11 @@ class Brain:
         self.campaigns = CampaignManager(
             self.store,
             self.sales_analytics,
+            memory,
+            logger
+        )
+
+        self.notifications = NotificationCenter(
             memory,
             logger
         )
@@ -369,21 +375,37 @@ class Brain:
         customer_email=None,
         quantity=1
     ):
-        return self.order_manager.create_order(
+        result = self.order_manager.create_order(
             product_id,
             customer_name,
             customer_email,
             quantity
         )
 
+        if result.get("status") == "order_created":
+            self.notifications.order_confirmation(result.get("order"))
+
+        return result
+
     def update_order(self, order_id, key, value):
         return self.order_manager.update_order(order_id, key, value)
 
     def fulfill_order(self, order_id, tracking_number=None):
-        return self.order_manager.fulfill_order(order_id, tracking_number)
+        result = self.order_manager.fulfill_order(order_id, tracking_number)
+
+        if result.get("status") == "order_fulfilled":
+            self.notifications.shipping_confirmation(result.get("order"))
+
+        return result
 
     def auto_fulfill_orders(self, tracking_prefix="HER"):
-        return self.order_manager.auto_fulfill_pending(tracking_prefix)
+        result = self.order_manager.auto_fulfill_pending(tracking_prefix)
+
+        for item in result.get("batch", {}).get("results", []):
+            if item.get("status") == "order_fulfilled":
+                self.notifications.shipping_confirmation(item.get("order"))
+
+        return result
 
     def fulfillment_history(self):
         return self.order_manager.fulfillment_history()
@@ -439,13 +461,37 @@ class Brain:
         return self.campaigns.simulate_performance(campaign_id)
 
     def optimize_campaigns(self):
-        return self.campaigns.optimize_campaigns()
+        result = self.campaigns.optimize_campaigns()
+
+        for item in result.get("results", []):
+            campaign = self.campaigns.get_campaign(item.get("campaign_id"))
+
+            if campaign:
+                self.notifications.campaign_alert(
+                    campaign,
+                    item.get("action"),
+                    item.get("reason")
+                )
+
+        return result
 
     def campaign_performance(self):
         return self.campaigns.performance_report()
 
     def campaign_report(self):
         return self.campaigns.campaign_report()
+
+    def notifications_all(self):
+        return self.notifications.all()
+
+    def pending_notifications(self):
+        return self.notifications.pending()
+
+    def send_notifications(self):
+        return self.notifications.send_pending()
+
+    def notification_batches(self):
+        return self.notifications.batches()
 
     def store_autopilot_config(self):
         return self.store_autopilot.config()
@@ -527,7 +573,8 @@ class Brain:
             "sales_summary": self.sales_summary(),
             "campaigns": self.campaigns_all(),
             "campaign_performance": self.campaign_performance(),
-            "store_autopilot_config": self.store_autopilot_config()
+            "store_autopilot_config": self.store_autopilot_config(),
+            "notifications": self.notifications_all()
         }
 
         prompt = f"""
