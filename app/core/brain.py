@@ -10,6 +10,7 @@ from app.core.reports.report_engine import ReportEngine
 from app.core.business.business_profile import BusinessProfile
 from app.core.decision.decision_engine import DecisionEngine
 from app.core.autopilot.autopilot_engine import AutopilotEngine
+from app.core.autopilot.dropshipping_autopilot import DropshippingAutopilot
 from app.core.health.health_check import HealthCheck
 from app.core.backup.backup_engine import BackupEngine
 from app.core.snapshot.snapshot_engine import SnapshotEngine
@@ -92,6 +93,15 @@ class Brain:
 
         self.campaigns = CampaignManager(
             self.store,
+            self.sales_analytics,
+            memory,
+            logger
+        )
+
+        self.store_autopilot = DropshippingAutopilot(
+            self.launch_pipeline,
+            self.campaigns,
+            self.order_manager,
             self.sales_analytics,
             memory,
             logger
@@ -436,6 +446,23 @@ class Brain:
 
     def campaign_report(self):
         return self.campaigns.campaign_report()
+
+    def run_store_autopilot(
+        self,
+        margin_percent=40,
+        budget=10,
+        channel="facebook_ads",
+        tracking_prefix="HER"
+    ):
+        return self.store_autopilot.run_cycle(
+            margin_percent,
+            budget,
+            channel,
+            tracking_prefix
+        )
+
+    def store_autopilot_history(self):
+        return self.store_autopilot.history()
 
     def next_action(self):
         return self.decisions.next_action()

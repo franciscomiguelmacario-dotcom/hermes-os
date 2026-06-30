@@ -50,6 +50,8 @@ class CLI:
                         "optimize-campaigns",
                         "campaign-performance",
                         "campaign-report",
+                        "store-autopilot <margin> | <budget> | <channel> | <tracking_prefix>",
+                        "store-autopilot-history",
                         "report",
                         "dashboard",
                         "exit"
@@ -282,6 +284,29 @@ class CLI:
 
             if cmd == "campaign-report":
                 self.logger.info(self.brain.campaign_report())
+                continue
+
+            if cmd.startswith("store-autopilot"):
+                raw = cmd.replace("store-autopilot", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|") if p.strip()]
+
+                margin = parts[0] if len(parts) > 0 else 40
+                budget = parts[1] if len(parts) > 1 else 10
+                channel = parts[2] if len(parts) > 2 else "facebook_ads"
+                tracking_prefix = parts[3] if len(parts) > 3 else "HER"
+
+                self.logger.info(
+                    self.brain.run_store_autopilot(
+                        margin,
+                        budget,
+                        channel,
+                        tracking_prefix
+                    )
+                )
+                continue
+
+            if cmd == "store-autopilot-history":
+                self.logger.info(self.brain.store_autopilot_history())
                 continue
 
             if cmd == "report":
