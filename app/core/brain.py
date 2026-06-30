@@ -405,6 +405,35 @@ class Brain:
     def pause_campaign(self, campaign_id):
         return self.campaigns.pause_campaign(campaign_id)
 
+    def update_campaign_metrics(
+        self,
+        campaign_id,
+        impressions=0,
+        clicks=0,
+        orders=0,
+        revenue=0,
+        profit=0,
+        spend=0
+    ):
+        return self.campaigns.update_metrics(
+            campaign_id,
+            impressions,
+            clicks,
+            orders,
+            revenue,
+            profit,
+            spend
+        )
+
+    def simulate_campaign(self, campaign_id):
+        return self.campaigns.simulate_performance(campaign_id)
+
+    def optimize_campaigns(self):
+        return self.campaigns.optimize_campaigns()
+
+    def campaign_performance(self):
+        return self.campaigns.performance_report()
+
     def campaign_report(self):
         return self.campaigns.campaign_report()
 
@@ -460,7 +489,8 @@ class Brain:
             "supplier_products": self.supplier_products(),
             "orders": self.orders_all(),
             "sales_summary": self.sales_summary(),
-            "campaigns": self.campaigns_all()
+            "campaigns": self.campaigns_all(),
+            "campaign_performance": self.campaign_performance()
         }
 
         prompt = f"""

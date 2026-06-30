@@ -45,6 +45,10 @@ class CLI:
                         "create-best-campaign <budget> | <channel>",
                         "launch-campaign <id>",
                         "pause-campaign <id>",
+                        "update-campaign-metrics <id> | <impressions> | <clicks> | <orders> | <revenue> | <profit> | <spend>",
+                        "simulate-campaign <id>",
+                        "optimize-campaigns",
+                        "campaign-performance",
                         "campaign-report",
                         "report",
                         "dashboard",
@@ -236,6 +240,44 @@ class CLI:
             if cmd.startswith("pause-campaign "):
                 campaign_id = cmd.replace("pause-campaign ", "", 1).strip()
                 self.logger.info(self.brain.pause_campaign(campaign_id))
+                continue
+
+            if cmd.startswith("update-campaign-metrics "):
+                raw = cmd.replace("update-campaign-metrics ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                campaign_id = parts[0]
+                impressions = parts[1] if len(parts) > 1 else 0
+                clicks = parts[2] if len(parts) > 2 else 0
+                orders = parts[3] if len(parts) > 3 else 0
+                revenue = parts[4] if len(parts) > 4 else 0
+                profit = parts[5] if len(parts) > 5 else 0
+                spend = parts[6] if len(parts) > 6 else 0
+
+                self.logger.info(
+                    self.brain.update_campaign_metrics(
+                        campaign_id,
+                        impressions,
+                        clicks,
+                        orders,
+                        revenue,
+                        profit,
+                        spend
+                    )
+                )
+                continue
+
+            if cmd.startswith("simulate-campaign "):
+                campaign_id = cmd.replace("simulate-campaign ", "", 1).strip()
+                self.logger.info(self.brain.simulate_campaign(campaign_id))
+                continue
+
+            if cmd == "optimize-campaigns":
+                self.logger.info(self.brain.optimize_campaigns())
+                continue
+
+            if cmd == "campaign-performance":
+                self.logger.info(self.brain.campaign_performance())
                 continue
 
             if cmd == "campaign-report":
