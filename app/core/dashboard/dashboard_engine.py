@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 
@@ -28,6 +27,22 @@ class DashboardEngine:
 
         return 0
 
+    def mask_sensitive_config(self, config):
+        if not isinstance(config, dict):
+            return config
+
+        masked = dict(config)
+
+        for key in ["api_key", "api_secret", "access_token"]:
+            value = masked.get(key)
+
+            if value:
+                masked[key] = "***configured***"
+            else:
+                masked[key] = ""
+
+        return masked
+
     def data(self):
         products = self.safe("store_products", [])
         supplier_products = self.safe("supplier_products", [])
@@ -45,6 +60,9 @@ class DashboardEngine:
         campaign_performance = self.safe("campaign_performance", {})
         autopilot_config = self.safe("store_autopilot_config", {})
         autopilot_history = self.safe("store_autopilot_history", [])
+
+        store_api_config = self.safe("store_api_config", {})
+        store_api_history = self.safe("store_api_history", [])
 
         active_products = [
             product for product in products
@@ -71,6 +89,10 @@ class DashboardEngine:
         if isinstance(autopilot_history, list) and autopilot_history:
             latest_cycle = autopilot_history[-1]
 
+        latest_store_sync = None
+        if isinstance(store_api_history, list) and store_api_history:
+            latest_store_sync = store_api_history[-1]
+
         dashboard = {
             "status": "dashboard_ready",
             "generated_at": datetime.now().isoformat(),
@@ -87,7 +109,8 @@ class DashboardEngine:
                 "notifications": self.count_list(notifications),
                 "pending_notifications": self.count_list(pending_notifications),
                 "support_tickets": self.count_list(support_tickets),
-                "pending_support": self.count_list(pending_support)
+                "pending_support": self.count_list(pending_support),
+                "store_api_events": self.count_list(store_api_history)
             },
             "money": {
                 "revenue": sales_summary.get("revenue", 0),
@@ -99,6 +122,11 @@ class DashboardEngine:
             "profit_report": profit_report,
             "campaign_report": campaign_report,
             "campaign_performance": campaign_performance,
+            "store_api": {
+                "config": self.mask_sensitive_config(store_api_config),
+                "history_count": self.count_list(store_api_history),
+                "latest_sync": latest_store_sync
+            },
             "autopilot": {
                 "config": autopilot_config,
                 "latest_cycle": latest_cycle,
@@ -109,7 +137,8 @@ class DashboardEngine:
                 pending_notifications,
                 pending_support,
                 active_campaigns,
-                sales_summary
+                sales_summary,
+                store_api_config
             ),
             "next_recommended_actions": self.next_actions(
                 products,
@@ -117,7 +146,8 @@ class DashboardEngine:
                 pending_orders,
                 pending_notifications,
                 pending_support,
-                active_campaigns
+                active_campaigns,
+                store_api_config
             )
         }
 
@@ -129,7 +159,8 @@ class DashboardEngine:
         pending_notifications,
         pending_support,
         active_campaigns,
-        sales_summary
+        sales_summary,
+        store_api_config
     ):
         alerts = []
 
@@ -157,6 +188,18 @@ class DashboardEngine:
                 "message": "Não há campanhas ativas."
             })
 
+        if not store_api_config.get("enabled"):
+            alerts.append({
+                "level": "info",
+                "message": "Store API ainda não está ativa."
+            })
+
+        if store_api_config.get("dry_run"):
+            alerts.append({
+                "level": "warning",
+                "message": "Store API está em modo dry-run. Nada será enviado para loja real."
+            })
+
         profit = float(sales_summary.get("profit") or 0)
 
         if profit < 0:
@@ -180,7 +223,8 @@ class DashboardEngine:
         pending_orders,
         pending_notifications,
         pending_support,
-        active_campaigns
+        active_campaigns,
+        store_api_config
     ):
         actions = []
 
@@ -201,6 +245,12 @@ class DashboardEngine:
 
         if pending_notifications:
             actions.append("Enviar notificações com send-notifications.")
+
+        if not store_api_config.get("enabled"):
+            actions.append("Configurar ligação à loja real no painel Store API.")
+
+        if store_api_config.get("dry_run"):
+            actions.append("Manter dry-run enquanto testas. Desativa apenas quando tiveres certeza.")
 
         if not actions:
             actions.append("Executar store-autopilot 40 | 10 | facebook_ads | HER.")
