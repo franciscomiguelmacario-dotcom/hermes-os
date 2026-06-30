@@ -1,4 +1,4 @@
-
+from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -60,6 +60,14 @@ class Brain:
 
         self.publisher = ProductPublisher(
             self.store,
+            memory,
+            logger
+        )
+
+        self.launch_pipeline = ProductLaunchPipeline(
+            self.importer,
+            self.publisher,
+            self.supplier,
             memory,
             logger
         )
@@ -283,6 +291,21 @@ class Brain:
 
     def autopilot_cycle(self, max_steps=5):
         return self.autopilot.run_cycle(max_steps)
+
+    def launch_product(self, supplier_product_id, margin_percent=None):
+        return self.launch_pipeline.launch_from_supplier_product(
+            supplier_product_id,
+            margin_percent
+        )
+
+    def launch_product_search(self, keyword, margin_percent=None):
+        return self.launch_pipeline.launch_first_match(
+            keyword,
+            margin_percent
+        )
+
+    def product_launch_history(self):
+        return self.launch_pipeline.history()
 
     def health_check(self):
         return self.health.run()
