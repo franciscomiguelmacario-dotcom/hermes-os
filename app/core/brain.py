@@ -1,4 +1,3 @@
-from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -19,9 +18,11 @@ from app.core.dashboard.dashboard_engine import DashboardEngine
 
 from app.core.connectors.store_connector import StoreConnector
 from app.core.connectors.supplier_connector import SupplierConnector
+from app.core.scoring.product_scoring import ProductScoring
 from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
 from app.core.publisher.product_publisher import ProductPublisher
+from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -48,6 +49,7 @@ class Brain:
 
         self.store = StoreConnector(memory, logger)
         self.supplier = SupplierConnector(memory, logger)
+        self.scoring = ProductScoring(self.supplier, memory, logger)
         self.pricing = PricingEngine(memory, logger)
 
         self.importer = ProductImporter(
@@ -236,6 +238,12 @@ class Brain:
     def delete_supplier_product(self, product_id):
         return self.supplier.delete_product(product_id)
 
+    def score_supplier_products(self):
+        return self.scoring.score_all()
+
+    def best_supplier_product(self):
+        return self.scoring.best_product()
+
     def pricing_config(self):
         return self.pricing.config()
 
@@ -283,15 +291,6 @@ class Brain:
     def product_publish_history(self):
         return self.publisher.history()
 
-    def next_action(self):
-        return self.decisions.next_action()
-
-    def autopilot_once(self):
-        return self.autopilot.run_once()
-
-    def autopilot_cycle(self, max_steps=5):
-        return self.autopilot.run_cycle(max_steps)
-
     def launch_product(self, supplier_product_id, margin_percent=None):
         return self.launch_pipeline.launch_from_supplier_product(
             supplier_product_id,
@@ -306,6 +305,15 @@ class Brain:
 
     def product_launch_history(self):
         return self.launch_pipeline.history()
+
+    def next_action(self):
+        return self.decisions.next_action()
+
+    def autopilot_once(self):
+        return self.autopilot.run_once()
+
+    def autopilot_cycle(self, max_steps=5):
+        return self.autopilot.run_cycle(max_steps)
 
     def health_check(self):
         return self.health.run()

@@ -29,6 +29,8 @@ class CLI:
                         "pricing",
                         "set-pricing <key> <value>",
                         "price <cost> <shipping> <margin_percent>",
+                        "score-suppliers",
+                        "best-supplier-product",
                         "supplier",
                         "product <id>",
                         "publish-product <id>",
@@ -323,6 +325,14 @@ class CLI:
 
                 _, key, value = parts
                 self.logger.info(self.brain.set_store_value(key, value))
+                continue
+
+            if cmd == "score-suppliers":
+                self.logger.info(self.brain.score_supplier_products())
+                continue
+
+            if cmd == "best-supplier-product":
+                self.logger.info(self.brain.best_supplier_product())
                 continue
 
             if cmd.startswith("launch-product-search "):
