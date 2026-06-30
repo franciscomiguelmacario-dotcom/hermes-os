@@ -1,16 +1,10 @@
-from app.core.pricing.pricing_engine import PricingEngine
-from app.core.connectors.supplier_connector import SupplierConnector
-from app.core.connectors.store_connector import StoreConnector
-from app.core.voice.jarvis_mode import JarvisMode
-from app.core.voice.listen_engine import ListenEngine
-from app.core.voice.speech_engine import SpeechEngine
-from app.core.llm.ollama_client import OllamaClient
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
 from app.core.runtime.agent_scheduler import AgentScheduler
 from app.core.learning_memory import LearningMemory
 from app.core.tasks.task_queue import TaskQueue
+
 from app.core.workflows.workflow_engine import WorkflowEngine
 from app.core.reports.report_engine import ReportEngine
 from app.core.business.business_profile import BusinessProfile
@@ -21,7 +15,17 @@ from app.core.backup.backup_engine import BackupEngine
 from app.core.snapshot.snapshot_engine import SnapshotEngine
 from app.core.cycles.business_cycle import BusinessCycle
 from app.core.dashboard.dashboard_engine import DashboardEngine
+
+from app.core.connectors.store_connector import StoreConnector
+from app.core.connectors.supplier_connector import SupplierConnector
+from app.core.pricing.pricing_engine import PricingEngine
+from app.core.importer.product_importer import ProductImporter
+
 from app.core.command_center.command_center import CommandCenter
+from app.core.llm.ollama_client import OllamaClient
+from app.core.voice.speech_engine import SpeechEngine
+from app.core.voice.listen_engine import ListenEngine
+from app.core.voice.jarvis_mode import JarvisMode
 
 
 class Brain:
@@ -35,13 +39,25 @@ class Brain:
         self.scheduler = AgentScheduler(logger)
         self.learning = LearningMemory(memory)
         self.tasks = TaskQueue(memory)
+
         self.workflows = WorkflowEngine(self.tasks, logger)
         self.reports = ReportEngine(memory, self.tasks)
         self.business = BusinessProfile(memory)
+
         self.store = StoreConnector(memory, logger)
-        self.pricing = PricingEngine(memory, logger)
         self.supplier = SupplierConnector(memory, logger)
+        self.pricing = PricingEngine(memory, logger)
+
+        self.importer = ProductImporter(
+            self.store,
+            self.supplier,
+            self.pricing,
+            memory,
+            logger
+        )
+
         self.decisions = DecisionEngine(memory, self.tasks)
+
         self.autopilot = AutopilotEngine(
             self.decisions,
             self.tasks,
@@ -65,11 +81,12 @@ class Brain:
         self.snapshot = SnapshotEngine(self)
         self.business_cycle = BusinessCycle(self, logger)
         self.dashboard = DashboardEngine(self)
+
         self.command_center = CommandCenter(self, logger)
+        self.llm = OllamaClient()
         self.speech = SpeechEngine(memory, logger)
         self.listener = ListenEngine(memory, logger)
         self.jarvis_mode = JarvisMode(self, logger)
-        self.llm = OllamaClient()
 
         self.logger.info("Brain loaded")
 
@@ -154,14 +171,23 @@ class Brain:
     def set_business_value(self, key, value):
         return self.business.set_value(key, value)
 
-    def next_action(self):
-        return self.decisions.next_action()
+    def store_config(self):
+        return self.store.config()
 
-    def autopilot_once(self):
-        return self.autopilot.run_once()
+    def set_store_value(self, key, value):
+        return self.store.set_value(key, value)
 
-    def autopilot_cycle(self, max_steps=5):
-        return self.autopilot.run_cycle(max_steps)
+    def store_products(self):
+        return self.store.products()
+
+    def create_store_product(self, title, price=None, cost=None):
+        return self.store.create_product(title, price, cost)
+
+    def update_store_product(self, product_id, key, value):
+        return self.store.update_product(product_id, key, value)
+
+    def delete_store_product(self, product_id):
+        return self.store.delete_product(product_id)
 
     def supplier_config(self):
         return self.supplier.config()
@@ -203,6 +229,30 @@ class Brain:
     def calculate_price(self, cost, shipping=0, margin_percent=None):
         return self.pricing.calculate(cost, shipping, margin_percent)
 
+    def import_supplier_product(self, supplier_product_id, margin_percent=None):
+        return self.importer.import_supplier_product(
+            supplier_product_id,
+            margin_percent
+        )
+
+    def import_supplier_search(self, keyword, margin_percent=None):
+        return self.importer.import_first_match(
+            keyword,
+            margin_percent
+        )
+
+    def product_import_history(self):
+        return self.importer.history()
+
+    def next_action(self):
+        return self.decisions.next_action()
+
+    def autopilot_once(self):
+        return self.autopilot.run_once()
+
+    def autopilot_cycle(self, max_steps=5):
+        return self.autopilot.run_cycle(max_steps)
+
     def health_check(self):
         return self.health.run()
 
@@ -240,11 +290,14 @@ class Brain:
         context = {
             "business_profile": self.business_profile(),
             "next_action": self.next_action(),
-            "tasks": self.tasks.all()
+            "tasks": self.tasks.all(),
+            "store_config": self.store_config(),
+            "store_products": self.store_products(),
+            "supplier_products": self.supplier_products()
         }
 
         prompt = f"""
-Tu és o Hermes, um sistema tipo Jarvis para gerir um negócio de dropshipping.
+Tu és o Hermes, um sistema de automação para dropshipping.
 
 Contexto atual:
 {context}
@@ -260,16 +313,16 @@ Responde em português, de forma curta, prática e direta.
     def speak(self, text):
         return self.speech.speak(text)
 
+    def handle_command_voice(self, text):
+        result = self.handle_command(text)
+        self.speak(result)
+        return result
+
     def voice_config(self):
         return self.speech.config()
 
     def set_voice_value(self, key, value):
         return self.speech.set_value(key, value)
-
-    def handle_command_voice(self, text):
-        result = self.handle_command(text)
-        self.speak(result)
-        return result
 
     def listen_config(self):
         return self.listener.config()
@@ -297,24 +350,6 @@ Responde em português, de forma curta, prática e direta.
 
     def start_jarvis_mode(self, cycles=10, seconds=5):
         return self.jarvis_mode.start(cycles, seconds)
-
-    def store_config(self):
-        return self.store.config()
-
-    def set_store_value(self, key, value):
-        return self.store.set_value(key, value)
-
-    def store_products(self):
-        return self.store.products()
-
-    def create_store_product(self, title, price=None, cost=None):
-        return self.store.create_product(title, price, cost)
-
-    def update_store_product(self, product_id, key, value):
-        return self.store.update_product(product_id, key, value)
-
-    def delete_store_product(self, product_id):
-        return self.store.delete_product(product_id)
 
     def tick(self):
         self.scheduler.run(self.agents)

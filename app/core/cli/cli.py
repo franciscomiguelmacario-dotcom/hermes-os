@@ -31,6 +31,9 @@ class CLI:
                         "supplier",
                         "set-supplier <key> <value>",
                         "supplier-products",
+                        "import-product <supplier_product_id> <margin_percent>",
+                        "import-product-search <keyword> | <margin_percent>",
+                        "import-history",
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
                         "search-supplier <keyword>",
                         "delete-supplier-product <id>",
@@ -312,6 +315,40 @@ class CLI:
 
                 _, key, value = parts
                 self.logger.info(self.brain.set_store_value(key, value))
+                continue
+
+            if cmd.startswith("import-product-search "):
+                raw = cmd.replace("import-product-search ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                keyword = parts[0]
+                margin = parts[1] if len(parts) > 1 else None
+
+                self.logger.info(
+                    self.brain.import_supplier_search(keyword, margin)
+                )
+                continue
+
+            if cmd.startswith("import-product "):
+                parts = cmd.split(" ")
+
+                supplier_product_id = parts[1] if len(parts) > 1 else None
+                margin = parts[2] if len(parts) > 2 else None
+
+                if not supplier_product_id:
+                    self.logger.info("usage: import-product <supplier_product_id> <margin_percent>")
+                    continue
+
+                self.logger.info(
+                    self.brain.import_supplier_product(
+                        supplier_product_id,
+                        margin
+                    )
+                )
+                continue
+
+            if cmd == "import-history":
+                self.logger.info(self.brain.product_import_history())
                 continue
 
             if cmd == "products":
