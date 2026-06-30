@@ -19,6 +19,61 @@ class DropshippingAutopilot:
         self.memory = memory
         self.logger = logger
 
+    def config(self):
+        default = {
+            "enabled": True,
+            "max_active_campaigns": 3,
+            "max_daily_budget": 50,
+            "max_products": 20,
+            "allow_product_launch": True,
+            "allow_campaign_creation": True,
+            "allow_campaign_launch": True,
+            "allow_campaign_simulation": True,
+            "allow_campaign_optimization": True,
+            "allow_auto_fulfillment": True
+        }
+
+        saved = self.memory.get("store_autopilot_config", {})
+
+        if not isinstance(saved, dict):
+            saved = {}
+
+        config = {**default, **saved}
+        self.memory.set("store_autopilot_config", config)
+
+        return config
+
+    def set_config_value(self, key, value):
+        config = self.config()
+
+        if key not in config:
+            return {
+                "status": "error",
+                "message": "invalid config key",
+                "valid_keys": list(config.keys())
+            }
+
+        if str(value).lower() in ["true", "yes", "1"]:
+            value = True
+        elif str(value).lower() in ["false", "no", "0"]:
+            value = False
+        else:
+            try:
+                if "." in str(value):
+                    value = float(value)
+                else:
+                    value = int(value)
+            except Exception:
+                pass
+
+        config[key] = value
+        self.memory.set("store_autopilot_config", config)
+
+        return {
+            "status": "autopilot_config_updated",
+            "config": config
+        }
+
     def active_products(self):
         return self.campaign_manager.active_products()
 
@@ -28,6 +83,63 @@ class DropshippingAutopilot:
             if campaign.get("status") == "active"
         ]
 
+    def total_active_budget(self):
+        return sum(
+            float(campaign.get("budget") or 0)
+            for campaign in self.active_campaigns()
+        )
+
+    def safety_check(self, requested_budget=0):
+        config = self.config()
+
+        if not config.get("enabled"):
+            return {
+                "allowed": False,
+                "reason": "autopilot_disabled",
+                "config": config
+            }
+
+        active_campaigns = len(self.active_campaigns())
+        max_active_campaigns = int(config.get("max_active_campaigns") or 0)
+
+        if active_campaigns >= max_active_campaigns:
+            return {
+                "allowed": False,
+                "reason": "max_active_campaigns_reached",
+                "active_campaigns": active_campaigns,
+                "max_active_campaigns": max_active_campaigns
+            }
+
+        total_budget = self.total_active_budget() + float(requested_budget or 0)
+        max_daily_budget = float(config.get("max_daily_budget") or 0)
+
+        if total_budget > max_daily_budget:
+            return {
+                "allowed": False,
+                "reason": "max_daily_budget_exceeded",
+                "total_budget_after_request": round(total_budget, 2),
+                "max_daily_budget": max_daily_budget
+            }
+
+        products_count = len(self.active_products())
+        max_products = int(config.get("max_products") or 0)
+
+        if products_count >= max_products:
+            return {
+                "allowed": False,
+                "reason": "max_products_reached",
+                "products_count": products_count,
+                "max_products": max_products
+            }
+
+        return {
+            "allowed": True,
+            "reason": "safe_to_run",
+            "active_campaigns": active_campaigns,
+            "active_budget": round(self.total_active_budget(), 2),
+            "products_count": products_count
+        }
+
     def run_cycle(
         self,
         margin_percent=40,
@@ -35,9 +147,35 @@ class DropshippingAutopilot:
         channel="facebook_ads",
         tracking_prefix="HER"
     ):
+        config = self.config()
         steps = []
 
-        if not self.active_products():
+        safety = self.safety_check(budget)
+
+        steps.append({
+            "step": "safety_check",
+            "result": safety
+        })
+
+        if not safety.get("allowed"):
+            cycle = {
+                "status": "store_autopilot_blocked",
+                "created_at": datetime.now().isoformat(),
+                "reason": safety.get("reason"),
+                "settings": {
+                    "margin_percent": margin_percent,
+                    "budget": budget,
+                    "channel": channel,
+                    "tracking_prefix": tracking_prefix
+                },
+                "config": config,
+                "steps": steps
+            }
+
+            self.save_cycle(cycle)
+            return cycle
+
+        if config.get("allow_product_launch") and not self.active_products():
             product_launch = self.launch_pipeline.launch_best_product(
                 margin_percent
             )
@@ -51,21 +189,30 @@ class DropshippingAutopilot:
                 "step": "launch_best_product",
                 "result": {
                     "status": "skipped",
-                    "message": "active product already exists"
+                    "message": "product launch disabled or active product already exists"
                 }
             })
 
-        campaign_created = self.campaign_manager.create_for_best_active_product(
-            budget,
-            channel
-        )
+        if config.get("allow_campaign_creation"):
+            campaign_created = self.campaign_manager.create_for_best_active_product(
+                budget,
+                channel
+            )
+        else:
+            campaign_created = {
+                "status": "skipped",
+                "message": "campaign creation disabled"
+            }
 
         steps.append({
             "step": "create_campaign",
             "result": campaign_created
         })
 
-        if campaign_created.get("status") == "campaign_created":
+        if (
+            config.get("allow_campaign_launch")
+            and campaign_created.get("status") == "campaign_created"
+        ):
             campaign = campaign_created.get("campaign", {})
             launched = self.campaign_manager.launch_campaign(campaign["id"])
 
@@ -73,31 +220,52 @@ class DropshippingAutopilot:
                 "step": "launch_campaign",
                 "result": launched
             })
+        else:
+            steps.append({
+                "step": "launch_campaign",
+                "result": {
+                    "status": "skipped",
+                    "message": "campaign launch disabled or no campaign created"
+                }
+            })
 
         simulations = []
 
-        for campaign in self.active_campaigns():
-            simulations.append(
-                self.campaign_manager.simulate_performance(
-                    campaign["id"]
+        if config.get("allow_campaign_simulation"):
+            for campaign in self.active_campaigns():
+                simulations.append(
+                    self.campaign_manager.simulate_performance(
+                        campaign["id"]
+                    )
                 )
-            )
 
         steps.append({
             "step": "simulate_campaigns",
             "result": simulations
         })
 
-        optimization = self.campaign_manager.optimize_campaigns()
+        if config.get("allow_campaign_optimization"):
+            optimization = self.campaign_manager.optimize_campaigns()
+        else:
+            optimization = {
+                "status": "skipped",
+                "message": "campaign optimization disabled"
+            }
 
         steps.append({
             "step": "optimize_campaigns",
             "result": optimization
         })
 
-        fulfillment = self.order_manager.auto_fulfill_pending(
-            tracking_prefix
-        )
+        if config.get("allow_auto_fulfillment"):
+            fulfillment = self.order_manager.auto_fulfill_pending(
+                tracking_prefix
+            )
+        else:
+            fulfillment = {
+                "status": "skipped",
+                "message": "auto fulfillment disabled"
+            }
 
         steps.append({
             "step": "auto_fulfill_orders",
@@ -116,16 +284,20 @@ class DropshippingAutopilot:
                 "channel": channel,
                 "tracking_prefix": tracking_prefix
             },
+            "config": config,
             "steps": steps,
             "sales_report": sales_report,
             "campaign_report": campaign_report
         }
 
+        self.save_cycle(cycle)
+
+        return cycle
+
+    def save_cycle(self, cycle):
         history = self.memory.get("store_autopilot_history", [])
         history.append(cycle)
         self.memory.set("store_autopilot_history", history)
-
-        return cycle
 
     def history(self):
         return self.memory.get("store_autopilot_history", [])
