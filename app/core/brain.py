@@ -19,6 +19,7 @@ from app.core.dashboard.dashboard_engine import DashboardEngine
 
 from app.core.connectors.store_connector import StoreConnector
 from app.core.connectors.supplier_connector import SupplierConnector
+from app.core.integrations.store_api_connector import StoreApiConnector
 from app.core.scoring.product_scoring import ProductScoring
 from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
@@ -54,6 +55,7 @@ class Brain:
         self.business = BusinessProfile(memory)
 
         self.store = StoreConnector(memory, logger)
+        self.store_api = StoreApiConnector(memory, logger)
         self.supplier = SupplierConnector(memory, logger)
         self.scoring = ProductScoring(self.supplier, memory, logger)
         self.pricing = PricingEngine(memory, logger)
@@ -256,6 +258,29 @@ class Brain:
     def delete_store_product(self, product_id):
         return self.store.delete_product(product_id)
 
+    def store_api_config(self):
+        return self.store_api.config()
+
+    def set_store_api_config(self, key, value):
+        return self.store_api.set_config_value(key, value)
+
+    def push_product_to_store(self, product_id):
+        product = self.publisher.get_product(product_id)
+
+        if not product:
+            return {
+                "status": "error",
+                "message": "product not found"
+            }
+
+        return self.store_api.push_product(product)
+
+    def sync_products_to_store(self):
+        return self.store_api.sync_products(self.store_products())
+
+    def store_api_history(self):
+        return self.store_api.history()
+
     def supplier_config(self):
         return self.supplier.config()
 
@@ -332,7 +357,19 @@ class Brain:
         }
 
     def publish_product(self, product_id):
-        return self.publisher.publish(product_id)
+        result = self.publisher.publish(product_id)
+
+        config = self.store_api_config()
+
+        if (
+            result.get("status") == "product_published"
+            and config.get("auto_sync_on_publish")
+        ):
+            result["store_api_sync"] = self.store_api.push_product(
+                result.get("product")
+            )
+
+        return result
 
     def unpublish_product(self, product_id):
         return self.publisher.unpublish(product_id)
@@ -568,12 +605,19 @@ class Brain:
         channel="facebook_ads",
         tracking_prefix="HER"
     ):
-        return self.store_autopilot.run_cycle(
+        result = self.store_autopilot.run_cycle(
             margin_percent,
             budget,
             channel,
             tracking_prefix
         )
+
+        config = self.store_api_config()
+
+        if config.get("auto_sync_on_publish"):
+            result["store_api_sync"] = self.sync_products_to_store()
+
+        return result
 
     def store_autopilot_history(self):
         return self.store_autopilot.history()
@@ -626,6 +670,7 @@ class Brain:
             "next_action": self.next_action(),
             "tasks": self.tasks.all(),
             "store_config": self.store_config(),
+            "store_api_config": self.store_api_config(),
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
             "orders": self.orders_all(),

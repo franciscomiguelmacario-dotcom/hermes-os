@@ -22,6 +22,11 @@ class CLI:
                         "status",
                         "business",
                         "store",
+                        "store-api",
+                        "set-store-api <key> <value>",
+                        "push-product-store <product_id>",
+                        "sync-store-products",
+                        "store-api-history",
                         "supplier",
                         "supplier-products",
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
@@ -94,6 +99,37 @@ class CLI:
 
             if cmd == "store":
                 self.logger.info(self.brain.store_config())
+                continue
+
+            if cmd == "store-api":
+                self.logger.info(self.brain.store_api_config())
+                continue
+
+            if cmd.startswith("set-store-api "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-store-api <key> <value>")
+                    continue
+
+                _, key, value = parts
+
+                self.logger.info(
+                    self.brain.set_store_api_config(key, value)
+                )
+                continue
+
+            if cmd.startswith("push-product-store "):
+                product_id = cmd.replace("push-product-store ", "", 1).strip()
+                self.logger.info(self.brain.push_product_to_store(product_id))
+                continue
+
+            if cmd == "sync-store-products":
+                self.logger.info(self.brain.sync_products_to_store())
+                continue
+
+            if cmd == "store-api-history":
+                self.logger.info(self.brain.store_api_history())
                 continue
 
             if cmd == "supplier":
