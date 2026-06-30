@@ -78,11 +78,7 @@ class CommandCenter:
             key, value = business_result
             return self.brain.set_business_value(key, value)
 
-        return {
-            "status": "unknown_command",
-            "input": original,
-            "suggestion": "try: jarvis cria tarefa pesquisar produto vencedor"
-        }
+        return self.brain.chat(original)
 
     def extract_task(self, text):
         normalized = self.normalize(text)
@@ -155,6 +151,7 @@ class CommandCenter:
                 "jarvis fazer backup",
                 "jarvis definir nome da loja Hermes Store",
                 "jarvis definir nicho gadgets",
-                "jarvis definir orçamento 100"
+                "jarvis definir orçamento 100",
+                "jarvis o que achas do negócio?"
             ]
         }
