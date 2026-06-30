@@ -29,6 +29,10 @@ class CLI:
                         "set-pricing <key> <value>",
                         "price <cost> <shipping> <margin_percent>",
                         "supplier",
+                        "product <id>",
+                        "publish-product <id>",
+                        "unpublish-product <id>",
+                        "publish-history",
                         "set-supplier <key> <value>",
                         "supplier-products",
                         "import-product <supplier_product_id> <margin_percent>",
@@ -349,6 +353,25 @@ class CLI:
 
             if cmd == "import-history":
                 self.logger.info(self.brain.product_import_history())
+                continue
+
+            if cmd.startswith("product "):
+                product_id = cmd.replace("product ", "", 1).strip()
+                self.logger.info(self.brain.product_detail(product_id))
+                continue
+
+            if cmd.startswith("publish-product "):
+                product_id = cmd.replace("publish-product ", "", 1).strip()
+                self.logger.info(self.brain.publish_product(product_id))
+                continue
+
+            if cmd.startswith("unpublish-product "):
+                product_id = cmd.replace("unpublish-product ", "", 1).strip()
+                self.logger.info(self.brain.unpublish_product(product_id))
+                continue
+
+            if cmd == "publish-history":
+                self.logger.info(self.brain.product_publish_history())
                 continue
 
             if cmd == "products":

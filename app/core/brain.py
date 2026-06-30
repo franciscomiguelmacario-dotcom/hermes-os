@@ -1,3 +1,4 @@
+
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -20,6 +21,7 @@ from app.core.connectors.store_connector import StoreConnector
 from app.core.connectors.supplier_connector import SupplierConnector
 from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
+from app.core.publisher.product_publisher import ProductPublisher
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -52,6 +54,12 @@ class Brain:
             self.store,
             self.supplier,
             self.pricing,
+            memory,
+            logger
+        )
+
+        self.publisher = ProductPublisher(
+            self.store,
             memory,
             logger
         )
@@ -243,6 +251,29 @@ class Brain:
 
     def product_import_history(self):
         return self.importer.history()
+
+    def product_detail(self, product_id):
+        product = self.publisher.get_product(product_id)
+
+        if not product:
+            return {
+                "status": "error",
+                "message": "product not found"
+            }
+
+        return {
+            "status": "ok",
+            "product": product
+        }
+
+    def publish_product(self, product_id):
+        return self.publisher.publish(product_id)
+
+    def unpublish_product(self, product_id):
+        return self.publisher.unpublish(product_id)
+
+    def product_publish_history(self):
+        return self.publisher.history()
 
     def next_action(self):
         return self.decisions.next_action()
