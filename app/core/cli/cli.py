@@ -28,6 +28,11 @@ class CLI:
                         "sync-store-products",
                         "store-api-history",
                         "supplier",
+                        "supplier-api",
+                        "set-supplier-api <key> <value>",
+                        "submit-order-supplier <order_id>",
+                        "submit-pending-orders-supplier",
+                        "supplier-api-history",
                         "supplier-products",
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
                         "score-suppliers",
@@ -134,6 +139,37 @@ class CLI:
 
             if cmd == "supplier":
                 self.logger.info(self.brain.supplier_config())
+                continue
+
+            if cmd == "supplier-api":
+                self.logger.info(self.brain.supplier_api_config())
+                continue
+
+            if cmd.startswith("set-supplier-api "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-supplier-api <key> <value>")
+                    continue
+
+                _, key, value = parts
+
+                self.logger.info(
+                    self.brain.set_supplier_api_config(key, value)
+                )
+                continue
+
+            if cmd.startswith("submit-order-supplier "):
+                order_id = cmd.replace("submit-order-supplier ", "", 1).strip()
+                self.logger.info(self.brain.submit_order_to_supplier(order_id))
+                continue
+
+            if cmd == "submit-pending-orders-supplier":
+                self.logger.info(self.brain.submit_pending_orders_to_supplier())
+                continue
+
+            if cmd == "supplier-api-history":
+                self.logger.info(self.brain.supplier_api_history())
                 continue
 
             if cmd == "supplier-products":

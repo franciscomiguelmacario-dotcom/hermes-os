@@ -20,6 +20,7 @@ from app.core.dashboard.dashboard_engine import DashboardEngine
 from app.core.connectors.store_connector import StoreConnector
 from app.core.connectors.supplier_connector import SupplierConnector
 from app.core.integrations.store_api_connector import StoreApiConnector
+from app.core.integrations.supplier_api_connector import SupplierApiConnector
 from app.core.scoring.product_scoring import ProductScoring
 from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
@@ -56,7 +57,10 @@ class Brain:
 
         self.store = StoreConnector(memory, logger)
         self.store_api = StoreApiConnector(memory, logger)
+
         self.supplier = SupplierConnector(memory, logger)
+        self.supplier_api = SupplierApiConnector(memory, logger)
+
         self.scoring = ProductScoring(self.supplier, memory, logger)
         self.pricing = PricingEngine(memory, logger)
 
@@ -311,6 +315,29 @@ class Brain:
 
     def delete_supplier_product(self, product_id):
         return self.supplier.delete_product(product_id)
+
+    def supplier_api_config(self):
+        return self.supplier_api.config()
+
+    def set_supplier_api_config(self, key, value):
+        return self.supplier_api.set_config_value(key, value)
+
+    def submit_order_to_supplier(self, order_id):
+        order = self.order_manager.get_order(order_id)
+
+        if not order:
+            return {
+                "status": "error",
+                "message": "order not found"
+            }
+
+        return self.supplier_api.submit_order(order)
+
+    def submit_pending_orders_to_supplier(self):
+        return self.supplier_api.submit_orders(self.orders_all())
+
+    def supplier_api_history(self):
+        return self.supplier_api.history()
 
     def score_supplier_products(self):
         return self.scoring.score_all()
@@ -671,6 +698,7 @@ class Brain:
             "tasks": self.tasks.all(),
             "store_config": self.store_config(),
             "store_api_config": self.store_api_config(),
+            "supplier_api_config": self.supplier_api_config(),
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
             "orders": self.orders_all(),
