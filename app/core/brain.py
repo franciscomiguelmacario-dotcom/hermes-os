@@ -24,6 +24,7 @@ from app.core.importer.product_importer import ProductImporter
 from app.core.publisher.product_publisher import ProductPublisher
 from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
 from app.core.orders.order_manager import OrderManager
+from app.core.analytics.sales_analytics import SalesAnalytics
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -78,6 +79,12 @@ class Brain:
 
         self.order_manager = OrderManager(
             self.store,
+            memory,
+            logger
+        )
+
+        self.sales_analytics = SalesAnalytics(
+            self.order_manager,
             memory,
             logger
         )
@@ -357,8 +364,23 @@ class Brain:
     def fulfill_order(self, order_id, tracking_number=None):
         return self.order_manager.fulfill_order(order_id, tracking_number)
 
+    def auto_fulfill_orders(self, tracking_prefix="HER"):
+        return self.order_manager.auto_fulfill_pending(tracking_prefix)
+
     def fulfillment_history(self):
         return self.order_manager.fulfillment_history()
+
+    def fulfillment_batches(self):
+        return self.order_manager.fulfillment_batches()
+
+    def sales_summary(self):
+        return self.sales_analytics.summary()
+
+    def best_selling_products(self):
+        return self.sales_analytics.best_selling_products()
+
+    def profit_report(self):
+        return self.sales_analytics.profit_report()
 
     def next_action(self):
         return self.decisions.next_action()
@@ -410,7 +432,8 @@ class Brain:
             "store_config": self.store_config(),
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
-            "orders": self.orders_all()
+            "orders": self.orders_all(),
+            "sales_summary": self.sales_summary()
         }
 
         prompt = f"""

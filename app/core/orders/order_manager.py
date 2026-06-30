@@ -128,5 +128,53 @@ class OrderManager:
             "message": "order not found"
         }
 
+    def auto_fulfill_pending(self, tracking_prefix="HER"):
+        pending_orders = self.pending()
+        results = []
+
+        for order in pending_orders:
+            if not order.get("supplier_url"):
+                result = self.update_order(
+                    order["id"],
+                    "status",
+                    "manual_review"
+                )
+
+                results.append({
+                    "status": "manual_review_required",
+                    "reason": "missing supplier_url",
+                    "order": result.get("order")
+                })
+
+                continue
+
+            tracking_number = f"{tracking_prefix}{int(order['id']):06d}"
+
+            results.append(
+                self.fulfill_order(
+                    order["id"],
+                    tracking_number
+                )
+            )
+
+        batch = {
+            "created_at": datetime.now().isoformat(),
+            "orders_processed": len(results),
+            "results": results
+        }
+
+        batches = self.memory.get("fulfillment_batches", [])
+        batches.append(batch)
+        self.memory.set("fulfillment_batches", batches)
+
+        return {
+            "status": "auto_fulfillment_finished",
+            "orders_processed": len(results),
+            "batch": batch
+        }
+
     def fulfillment_history(self):
         return self.memory.get("fulfillment_history", [])
+
+    def fulfillment_batches(self):
+        return self.memory.get("fulfillment_batches", [])
