@@ -23,6 +23,7 @@ from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
 from app.core.publisher.product_publisher import ProductPublisher
 from app.core.pipeline.product_launch_pipeline import ProductLaunchPipeline
+from app.core.orders.order_manager import OrderManager
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -73,6 +74,12 @@ class Brain:
             memory,
             logger,
             self.scoring
+        )
+
+        self.order_manager = OrderManager(
+            self.store,
+            memory,
+            logger
         )
 
         self.decisions = DecisionEngine(memory, self.tasks)
@@ -310,6 +317,49 @@ class Brain:
     def product_launch_history(self):
         return self.launch_pipeline.history()
 
+    def orders_all(self):
+        return self.order_manager.all()
+
+    def pending_orders(self):
+        return self.order_manager.pending()
+
+    def order_detail(self, order_id):
+        order = self.order_manager.get_order(order_id)
+
+        if not order:
+            return {
+                "status": "error",
+                "message": "order not found"
+            }
+
+        return {
+            "status": "ok",
+            "order": order
+        }
+
+    def create_order(
+        self,
+        product_id,
+        customer_name=None,
+        customer_email=None,
+        quantity=1
+    ):
+        return self.order_manager.create_order(
+            product_id,
+            customer_name,
+            customer_email,
+            quantity
+        )
+
+    def update_order(self, order_id, key, value):
+        return self.order_manager.update_order(order_id, key, value)
+
+    def fulfill_order(self, order_id, tracking_number=None):
+        return self.order_manager.fulfill_order(order_id, tracking_number)
+
+    def fulfillment_history(self):
+        return self.order_manager.fulfillment_history()
+
     def next_action(self):
         return self.decisions.next_action()
 
@@ -359,7 +409,8 @@ class Brain:
             "tasks": self.tasks.all(),
             "store_config": self.store_config(),
             "store_products": self.store_products(),
-            "supplier_products": self.supplier_products()
+            "supplier_products": self.supplier_products(),
+            "orders": self.orders_all()
         }
 
         prompt = f"""

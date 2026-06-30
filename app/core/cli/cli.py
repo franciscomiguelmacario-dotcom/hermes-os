@@ -18,19 +18,8 @@ class CLI:
                 self.logger.info({
                     "commands": [
                         "help",
-                        "jarvis <texto>",
-                        "ask <texto>",
-                        "chat <texto>",
                         "health",
                         "status",
-                        "memory",
-                        "memory-key <key>",
-                        "backup",
-                        "backups",
-                        "restore-backup <filename>",
-                        "snapshot",
-                        "snapshots",
-                        "restore-snapshot <filename>",
                         "business",
                         "set-business <key> <value>",
                         "store",
@@ -40,15 +29,13 @@ class CLI:
                         "supplier-products",
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
                         "search-supplier <keyword>",
-                        "delete-supplier-product <id>",
                         "score-suppliers",
                         "best-supplier-product",
                         "pricing",
-                        "set-pricing <key> <value>",
                         "price <cost> <shipping> <margin_percent>",
                         "products",
-                        "create-product <title> | <price> | <cost>",
                         "product <id>",
+                        "create-product <title> | <price> | <cost>",
                         "update-product <id> <key> <value>",
                         "delete-product <id>",
                         "import-product <supplier_product_id> <margin_percent>",
@@ -61,6 +48,13 @@ class CLI:
                         "launch-product-search <keyword> | <margin_percent>",
                         "launch-best-product <margin_percent>",
                         "launch-history",
+                        "orders",
+                        "pending-orders",
+                        "order <id>",
+                        "create-order <product_id> | <customer_name> | <customer_email> | <quantity>",
+                        "update-order <id> <key> <value>",
+                        "fulfill-order <id> | <tracking_number>",
+                        "fulfillment-history",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
@@ -76,100 +70,17 @@ class CLI:
                         "export-report",
                         "export-report-md",
                         "export-obsidian",
-                        "set-obsidian-path <path>",
-                        "voice",
-                        "set-voice <key> <value>",
-                        "say <texto>",
-                        "jarvis-say <texto>",
-                        "listen",
-                        "jarvis-listen",
-                        "listen-config",
-                        "set-listen <key> <value>",
-                        "jarvis-mode",
-                        "jarvis-mode <cycles>",
-                        "learn",
-                        "patterns",
-                        "history <agent>",
-                        "priority <agent> <number>",
-                        "run <texto>",
+                        "backup",
+                        "backups",
+                        "snapshot",
+                        "snapshots",
+                        "memory",
+                        "memory-key <key>",
+                        "chat <texto>",
+                        "jarvis <texto>",
                         "exit"
                     ]
                 })
-                continue
-
-            if cmd.startswith("jarvis "):
-                text = cmd.replace("jarvis ", "", 1).strip()
-                self.logger.info(self.brain.handle_command(text))
-                continue
-
-            if cmd.startswith("ask "):
-                text = cmd.replace("ask ", "", 1).strip()
-                self.logger.info(self.brain.handle_command(text))
-                continue
-
-            if cmd.startswith("chat "):
-                text = cmd.replace("chat ", "", 1).strip()
-                self.logger.info(self.brain.chat(text))
-                continue
-
-            if cmd.startswith("jarvis-say "):
-                text = cmd.replace("jarvis-say ", "", 1).strip()
-                self.logger.info(self.brain.handle_command_voice(text))
-                continue
-
-            if cmd.startswith("say "):
-                text = cmd.replace("say ", "", 1).strip()
-                self.logger.info(self.brain.speak(text))
-                continue
-
-            if cmd == "voice":
-                self.logger.info(self.brain.voice_config())
-                continue
-
-            if cmd.startswith("set-voice "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-voice <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_voice_value(key, value))
-                continue
-
-            if cmd == "listen-config":
-                self.logger.info(self.brain.listen_config())
-                continue
-
-            if cmd.startswith("set-listen "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-listen <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_listen_value(key, value))
-                continue
-
-            if cmd == "listen":
-                self.logger.info("listening...")
-                self.logger.info(self.brain.listen_once())
-                continue
-
-            if cmd == "jarvis-listen":
-                self.logger.info("listening...")
-                self.logger.info(self.brain.listen_and_handle())
-                continue
-
-            if cmd.startswith("jarvis-mode"):
-                parts = cmd.split(" ")
-
-                cycles = 10
-                if len(parts) == 2:
-                    cycles = int(parts[1])
-
-                self.logger.info(self.brain.start_jarvis_mode(cycles=cycles))
                 continue
 
             if cmd == "health":
@@ -185,52 +96,15 @@ class CLI:
                 })
                 continue
 
-            if cmd == "backup":
-                self.logger.info(self.brain.create_backup())
-                continue
-
-            if cmd == "backups":
-                self.logger.info(self.brain.list_backups())
-                continue
-
-            if cmd.startswith("restore-backup "):
-                filename = cmd.replace("restore-backup ", "", 1).strip()
-                self.logger.info(self.brain.restore_backup(filename))
-                continue
-
-            if cmd == "snapshot":
-                self.logger.info(self.brain.create_snapshot())
-                continue
-
-            if cmd == "snapshots":
-                self.logger.info(self.brain.list_snapshots())
-                continue
-
-            if cmd.startswith("restore-snapshot "):
-                filename = cmd.replace("restore-snapshot ", "", 1).strip()
-                self.logger.info(self.brain.restore_snapshot(filename))
-                continue
-
-            if cmd == "memory":
-                self.logger.info(self.brain.memory.dump())
-                continue
-
-            if cmd.startswith("memory-key "):
-                key = cmd.replace("memory-key ", "", 1).strip()
-                self.logger.info(self.brain.memory.get(key))
-                continue
-
             if cmd == "business":
                 self.logger.info(self.brain.business_profile())
                 continue
 
             if cmd.startswith("set-business "):
                 parts = cmd.split(" ", 2)
-
                 if len(parts) < 3:
                     self.logger.info("usage: set-business <key> <value>")
                     continue
-
                 _, key, value = parts
                 self.logger.info(self.brain.set_business_value(key, value))
                 continue
@@ -241,11 +115,9 @@ class CLI:
 
             if cmd.startswith("set-store "):
                 parts = cmd.split(" ", 2)
-
                 if len(parts) < 3:
                     self.logger.info("usage: set-store <key> <value>")
                     continue
-
                 _, key, value = parts
                 self.logger.info(self.brain.set_store_value(key, value))
                 continue
@@ -256,11 +128,9 @@ class CLI:
 
             if cmd.startswith("set-supplier "):
                 parts = cmd.split(" ", 2)
-
                 if len(parts) < 3:
                     self.logger.info("usage: set-supplier <key> <value>")
                     continue
-
                 _, key, value = parts
                 self.logger.info(self.brain.set_supplier_value(key, value))
                 continue
@@ -295,11 +165,6 @@ class CLI:
                 self.logger.info(self.brain.search_supplier_products(keyword))
                 continue
 
-            if cmd.startswith("delete-supplier-product "):
-                product_id = cmd.replace("delete-supplier-product ", "", 1).strip()
-                self.logger.info(self.brain.delete_supplier_product(product_id))
-                continue
-
             if cmd == "score-suppliers":
                 self.logger.info(self.brain.score_supplier_products())
                 continue
@@ -312,70 +177,46 @@ class CLI:
                 self.logger.info(self.brain.pricing_config())
                 continue
 
-            if cmd.startswith("set-pricing "):
-                parts = cmd.split(" ", 2)
-
-                if len(parts) < 3:
-                    self.logger.info("usage: set-pricing <key> <value>")
-                    continue
-
-                _, key, value = parts
-                self.logger.info(self.brain.set_pricing_value(key, value))
-                continue
-
             if cmd.startswith("price "):
                 parts = cmd.split(" ")
-
                 cost = parts[1] if len(parts) > 1 else 0
                 shipping = parts[2] if len(parts) > 2 else 0
                 margin = parts[3] if len(parts) > 3 else None
-
-                self.logger.info(
-                    self.brain.calculate_price(cost, shipping, margin)
-                )
+                self.logger.info(self.brain.calculate_price(cost, shipping, margin))
                 continue
 
-            if cmd.startswith("launch-best-product"):
-                parts = cmd.split(" ")
-                margin = parts[1] if len(parts) > 1 else None
-
-                self.logger.info(
-                    self.brain.launch_best_product(margin)
-                )
+            if cmd == "products":
+                self.logger.info(self.brain.store_products())
                 continue
 
-            if cmd.startswith("launch-product-search "):
-                raw = cmd.replace("launch-product-search ", "", 1).strip()
+            if cmd.startswith("product "):
+                product_id = cmd.replace("product ", "", 1).strip()
+                self.logger.info(self.brain.product_detail(product_id))
+                continue
+
+            if cmd.startswith("create-product "):
+                raw = cmd.replace("create-product ", "", 1).strip()
                 parts = [p.strip() for p in raw.split("|")]
 
-                keyword = parts[0]
-                margin = parts[1] if len(parts) > 1 else None
+                title = parts[0]
+                price = parts[1] if len(parts) > 1 else None
+                cost = parts[2] if len(parts) > 2 else None
 
-                self.logger.info(
-                    self.brain.launch_product_search(keyword, margin)
-                )
+                self.logger.info(self.brain.create_store_product(title, price, cost))
                 continue
 
-            if cmd.startswith("launch-product "):
-                parts = cmd.split(" ")
-
-                supplier_product_id = parts[1] if len(parts) > 1 else None
-                margin = parts[2] if len(parts) > 2 else None
-
-                if not supplier_product_id:
-                    self.logger.info("usage: launch-product <supplier_product_id> <margin_percent>")
+            if cmd.startswith("update-product "):
+                parts = cmd.split(" ", 3)
+                if len(parts) < 4:
+                    self.logger.info("usage: update-product <id> <key> <value>")
                     continue
-
-                self.logger.info(
-                    self.brain.launch_product(
-                        supplier_product_id,
-                        margin
-                    )
-                )
+                _, product_id, key, value = parts
+                self.logger.info(self.brain.update_store_product(product_id, key, value))
                 continue
 
-            if cmd == "launch-history":
-                self.logger.info(self.brain.product_launch_history())
+            if cmd.startswith("delete-product "):
+                product_id = cmd.replace("delete-product ", "", 1).strip()
+                self.logger.info(self.brain.delete_store_product(product_id))
                 continue
 
             if cmd.startswith("import-product-search "):
@@ -385,9 +226,7 @@ class CLI:
                 keyword = parts[0]
                 margin = parts[1] if len(parts) > 1 else None
 
-                self.logger.info(
-                    self.brain.import_supplier_search(keyword, margin)
-                )
+                self.logger.info(self.brain.import_supplier_search(keyword, margin))
                 continue
 
             if cmd.startswith("import-product "):
@@ -400,21 +239,11 @@ class CLI:
                     self.logger.info("usage: import-product <supplier_product_id> <margin_percent>")
                     continue
 
-                self.logger.info(
-                    self.brain.import_supplier_product(
-                        supplier_product_id,
-                        margin
-                    )
-                )
+                self.logger.info(self.brain.import_supplier_product(supplier_product_id, margin))
                 continue
 
             if cmd == "import-history":
                 self.logger.info(self.brain.product_import_history())
-                continue
-
-            if cmd.startswith("product "):
-                product_id = cmd.replace("product ", "", 1).strip()
-                self.logger.info(self.brain.product_detail(product_id))
                 continue
 
             if cmd.startswith("publish-product "):
@@ -431,39 +260,94 @@ class CLI:
                 self.logger.info(self.brain.product_publish_history())
                 continue
 
-            if cmd == "products":
-                self.logger.info(self.brain.store_products())
+            if cmd.startswith("launch-best-product"):
+                parts = cmd.split(" ")
+                margin = parts[1] if len(parts) > 1 else None
+                self.logger.info(self.brain.launch_best_product(margin))
                 continue
 
-            if cmd.startswith("create-product "):
-                raw = cmd.replace("create-product ", "", 1).strip()
+            if cmd.startswith("launch-product-search "):
+                raw = cmd.replace("launch-product-search ", "", 1).strip()
                 parts = [p.strip() for p in raw.split("|")]
 
-                title = parts[0]
-                price = parts[1] if len(parts) > 1 else None
-                cost = parts[2] if len(parts) > 2 else None
+                keyword = parts[0]
+                margin = parts[1] if len(parts) > 1 else None
+
+                self.logger.info(self.brain.launch_product_search(keyword, margin))
+                continue
+
+            if cmd.startswith("launch-product "):
+                parts = cmd.split(" ")
+
+                supplier_product_id = parts[1] if len(parts) > 1 else None
+                margin = parts[2] if len(parts) > 2 else None
+
+                if not supplier_product_id:
+                    self.logger.info("usage: launch-product <supplier_product_id> <margin_percent>")
+                    continue
+
+                self.logger.info(self.brain.launch_product(supplier_product_id, margin))
+                continue
+
+            if cmd == "launch-history":
+                self.logger.info(self.brain.product_launch_history())
+                continue
+
+            if cmd == "orders":
+                self.logger.info(self.brain.orders_all())
+                continue
+
+            if cmd == "pending-orders":
+                self.logger.info(self.brain.pending_orders())
+                continue
+
+            if cmd.startswith("order "):
+                order_id = cmd.replace("order ", "", 1).strip()
+                self.logger.info(self.brain.order_detail(order_id))
+                continue
+
+            if cmd.startswith("create-order "):
+                raw = cmd.replace("create-order ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                product_id = parts[0]
+                customer_name = parts[1] if len(parts) > 1 else None
+                customer_email = parts[2] if len(parts) > 2 else None
+                quantity = parts[3] if len(parts) > 3 else 1
 
                 self.logger.info(
-                    self.brain.create_store_product(title, price, cost)
+                    self.brain.create_order(
+                        product_id,
+                        customer_name,
+                        customer_email,
+                        quantity
+                    )
                 )
                 continue
 
-            if cmd.startswith("update-product "):
+            if cmd.startswith("update-order "):
                 parts = cmd.split(" ", 3)
 
                 if len(parts) < 4:
-                    self.logger.info("usage: update-product <id> <key> <value>")
+                    self.logger.info("usage: update-order <id> <key> <value>")
                     continue
 
-                _, product_id, key, value = parts
-                self.logger.info(
-                    self.brain.update_store_product(product_id, key, value)
-                )
+                _, order_id, key, value = parts
+                self.logger.info(self.brain.update_order(order_id, key, value))
                 continue
 
-            if cmd.startswith("delete-product "):
-                product_id = cmd.replace("delete-product ", "", 1).strip()
-                self.logger.info(self.brain.delete_store_product(product_id))
+            if cmd.startswith("fulfill-order "):
+                raw = cmd.replace("fulfill-order ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                order_id = parts[0]
+                tracking = parts[1] if len(parts) > 1 else None
+
+                self.logger.info(self.brain.fulfill_order(order_id, tracking))
+                continue
+
+            if cmd == "fulfillment-history":
+                self.logger.info(self.brain.fulfillment_history())
                 continue
 
             if cmd == "tasks":
@@ -476,8 +360,7 @@ class CLI:
 
             if cmd.startswith("task "):
                 title = cmd[5:]
-                task = self.brain.create_task(title)
-                self.logger.info(task)
+                self.logger.info(self.brain.create_task(title))
                 continue
 
             if cmd == "workflows":
@@ -486,8 +369,7 @@ class CLI:
 
             if cmd.startswith("workflow "):
                 name = cmd[9:]
-                result = self.brain.run_workflow(name)
-                self.logger.info(result)
+                self.logger.info(self.brain.run_workflow(name))
                 continue
 
             if cmd == "next-action":
@@ -500,8 +382,8 @@ class CLI:
 
             if cmd.startswith("autopilot-cycle"):
                 parts = cmd.split(" ")
-
                 max_steps = 5
+
                 if len(parts) == 2:
                     max_steps = int(parts[1])
 
@@ -536,34 +418,39 @@ class CLI:
                 self.logger.info(self.brain.export_obsidian_report())
                 continue
 
-            if cmd.startswith("set-obsidian-path "):
-                path = cmd.replace("set-obsidian-path ", "", 1).strip()
-                self.logger.info(self.brain.set_obsidian_path(path))
+            if cmd == "backup":
+                self.logger.info(self.brain.create_backup())
                 continue
 
-            if cmd == "learn":
-                self.logger.info(self.brain.learning.all())
+            if cmd == "backups":
+                self.logger.info(self.brain.list_backups())
                 continue
 
-            if cmd == "patterns":
-                self.logger.info(self.brain.memory.get("input_patterns", {}))
+            if cmd == "snapshot":
+                self.logger.info(self.brain.create_snapshot())
                 continue
 
-            if cmd.startswith("history "):
-                _, agent = cmd.split(" ", 1)
-                self.logger.info(self.brain.learning.history(agent))
+            if cmd == "snapshots":
+                self.logger.info(self.brain.list_snapshots())
                 continue
 
-            if cmd.startswith("priority "):
-                _, name, value = cmd.split(" ", 2)
-                ok = self.brain.set_priority(name, value)
-                self.logger.info("priority updated" if ok else "agent not found")
+            if cmd == "memory":
+                self.logger.info(self.brain.memory.dump())
                 continue
 
-            if cmd.startswith("run "):
-                data = cmd[4:]
-                result = self.brain.process(data)
-                self.logger.info(result)
+            if cmd.startswith("memory-key "):
+                key = cmd.replace("memory-key ", "", 1).strip()
+                self.logger.info(self.brain.memory.get(key))
+                continue
+
+            if cmd.startswith("chat "):
+                text = cmd.replace("chat ", "", 1).strip()
+                self.logger.info(self.brain.chat(text))
+                continue
+
+            if cmd.startswith("jarvis "):
+                text = cmd.replace("jarvis ", "", 1).strip()
+                self.logger.info(self.brain.handle_command(text))
                 continue
 
             self.logger.info("unknown command")
