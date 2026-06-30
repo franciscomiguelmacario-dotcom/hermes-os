@@ -32,6 +32,8 @@ class CLI:
                         "set-supplier-api <key> <value>",
                         "submit-order-supplier <order_id>",
                         "submit-pending-orders-supplier",
+                        "mark-supplier-tracking <order_id> | <tracking_number>",
+                        "fulfillment-pipeline-history",
                         "supplier-api-history",
                         "supplier-products",
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
@@ -166,6 +168,22 @@ class CLI:
 
             if cmd == "submit-pending-orders-supplier":
                 self.logger.info(self.brain.submit_pending_orders_to_supplier())
+                continue
+
+            if cmd.startswith("mark-supplier-tracking "):
+                raw = cmd.replace("mark-supplier-tracking ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                order_id = parts[0]
+                tracking = parts[1] if len(parts) > 1 else None
+
+                self.logger.info(
+                    self.brain.mark_supplier_tracking(order_id, tracking)
+                )
+                continue
+
+            if cmd == "fulfillment-pipeline-history":
+                self.logger.info(self.brain.fulfillment_pipeline_history())
                 continue
 
             if cmd == "supplier-api-history":

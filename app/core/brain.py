@@ -21,6 +21,7 @@ from app.core.connectors.store_connector import StoreConnector
 from app.core.connectors.supplier_connector import SupplierConnector
 from app.core.integrations.store_api_connector import StoreApiConnector
 from app.core.integrations.supplier_api_connector import SupplierApiConnector
+from app.core.fulfillment.fulfillment_pipeline import FulfillmentPipeline
 from app.core.scoring.product_scoring import ProductScoring
 from app.core.pricing.pricing_engine import PricingEngine
 from app.core.importer.product_importer import ProductImporter
@@ -113,6 +114,14 @@ class Brain:
 
         self.customer_support = SupportCenter(
             self.order_manager,
+            self.notifications,
+            memory,
+            logger
+        )
+
+        self.fulfillment_pipeline = FulfillmentPipeline(
+            self.order_manager,
+            self.supplier_api,
             self.notifications,
             memory,
             logger
@@ -323,18 +332,19 @@ class Brain:
         return self.supplier_api.set_config_value(key, value)
 
     def submit_order_to_supplier(self, order_id):
-        order = self.order_manager.get_order(order_id)
-
-        if not order:
-            return {
-                "status": "error",
-                "message": "order not found"
-            }
-
-        return self.supplier_api.submit_order(order)
+        return self.fulfillment_pipeline.submit_order(order_id)
 
     def submit_pending_orders_to_supplier(self):
-        return self.supplier_api.submit_orders(self.orders_all())
+        return self.fulfillment_pipeline.submit_pending_orders()
+
+    def mark_supplier_tracking(self, order_id, tracking_number):
+        return self.fulfillment_pipeline.mark_tracking(
+            order_id,
+            tracking_number
+        )
+
+    def fulfillment_pipeline_history(self):
+        return self.fulfillment_pipeline.history()
 
     def supplier_api_history(self):
         return self.supplier_api.history()
