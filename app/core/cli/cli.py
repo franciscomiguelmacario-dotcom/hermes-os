@@ -25,6 +25,12 @@ class CLI:
                         "create-product <title> | <price> | <cost>",
                         "update-product <id> <key> <value>",
                         "delete-product <id>",
+                        "supplier",
+                        "set-supplier <key> <value>",
+                        "supplier-products",
+                        "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
+                        "search-supplier <keyword>",
+                        "delete-supplier-product <id>",
                         "ask <texto>",
                         "health",
                         "status",
@@ -211,6 +217,56 @@ class CLI:
 
                 _, key, value = parts
                 self.logger.info(self.brain.set_business_value(key, value))
+                continue
+
+            if cmd == "supplier":
+                self.logger.info(self.brain.supplier_config())
+                continue
+
+            if cmd.startswith("set-supplier "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-supplier <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_supplier_value(key, value))
+                continue
+
+            if cmd == "supplier-products":
+                self.logger.info(self.brain.supplier_products())
+                continue
+
+            if cmd.startswith("add-supplier-product "):
+                raw = cmd.replace("add-supplier-product ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                title = parts[0]
+                cost = parts[1] if len(parts) > 1 else None
+                shipping_days = parts[2] if len(parts) > 2 else None
+                supplier_url = parts[3] if len(parts) > 3 else None
+                category = parts[4] if len(parts) > 4 else None
+
+                self.logger.info(
+                    self.brain.add_supplier_product(
+                        title,
+                        cost,
+                        shipping_days,
+                        supplier_url,
+                        category
+                    )
+                )
+                continue
+
+            if cmd.startswith("search-supplier "):
+                keyword = cmd.replace("search-supplier ", "", 1).strip()
+                self.logger.info(self.brain.search_supplier_products(keyword))
+                continue
+
+            if cmd.startswith("delete-supplier-product "):
+                product_id = cmd.replace("delete-supplier-product ", "", 1).strip()
+                self.logger.info(self.brain.delete_supplier_product(product_id))
                 continue
 
             if cmd == "store":

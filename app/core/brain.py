@@ -1,3 +1,4 @@
+from app.core.connectors.supplier_connector import SupplierConnector
 from app.core.connectors.store_connector import StoreConnector
 from app.core.voice.jarvis_mode import JarvisMode
 from app.core.voice.listen_engine import ListenEngine
@@ -37,6 +38,7 @@ class Brain:
         self.reports = ReportEngine(memory, self.tasks)
         self.business = BusinessProfile(memory)
         self.store = StoreConnector(memory, logger)
+        self.supplier = SupplierConnector(memory, logger)
         self.decisions = DecisionEngine(memory, self.tasks)
         self.autopilot = AutopilotEngine(
             self.decisions,
@@ -158,6 +160,37 @@ class Brain:
 
     def autopilot_cycle(self, max_steps=5):
         return self.autopilot.run_cycle(max_steps)
+
+    def supplier_config(self):
+        return self.supplier.config()
+
+    def set_supplier_value(self, key, value):
+        return self.supplier.set_value(key, value)
+
+    def supplier_products(self):
+        return self.supplier.products()
+
+    def add_supplier_product(
+        self,
+        title,
+        cost=None,
+        shipping_days=None,
+        supplier_url=None,
+        category=None
+    ):
+        return self.supplier.add_product(
+            title,
+            cost,
+            shipping_days,
+            supplier_url,
+            category
+        )
+
+    def search_supplier_products(self, keyword):
+        return self.supplier.search(keyword)
+
+    def delete_supplier_product(self, product_id):
+        return self.supplier.delete_product(product_id)
 
     def health_check(self):
         return self.health.run()
