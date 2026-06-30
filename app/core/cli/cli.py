@@ -50,6 +50,10 @@ class CLI:
                         "dashboard",
                         "report",
                         "export-report",
+                        "listen",
+                        "jarvis-listen",
+                        "listen-config",
+                        "set-listen <key> <value>",
                         "export-report-md",
                         "export-obsidian",
                         "set-obsidian-path <path>",
@@ -76,6 +80,31 @@ class CLI:
             if cmd.startswith("say "):
                 text = cmd.replace("say ", "", 1).strip()
                 self.logger.info(self.brain.speak(text))
+                continue
+
+            if cmd == "listen-config":
+                self.logger.info(self.brain.listen_config())
+                continue
+
+            if cmd.startswith("set-listen "):
+                parts = cmd.split(" ", 2)
+
+                if len(parts) < 3:
+                    self.logger.info("usage: set-listen <key> <value>")
+                    continue
+
+                _, key, value = parts
+                self.logger.info(self.brain.set_listen_value(key, value))
+                continue
+
+            if cmd == "listen":
+                self.logger.info("listening...")
+                self.logger.info(self.brain.listen_once())
+                continue
+
+            if cmd == "jarvis-listen":
+                self.logger.info("listening...")
+                self.logger.info(self.brain.listen_and_handle())
                 continue
 
             if cmd == "voice":

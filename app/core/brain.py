@@ -1,3 +1,4 @@
+from app.core.voice.listen_engine import ListenEngine
 from app.core.voice.speech_engine import SpeechEngine
 from app.core.llm.ollama_client import OllamaClient
 from app.core.agents.base_agent import BaseAgent
@@ -59,6 +60,7 @@ class Brain:
         self.dashboard = DashboardEngine(self)
         self.command_center = CommandCenter(self, logger)
         self.speech = SpeechEngine(memory, logger)
+        self.listener = ListenEngine(memory, logger)
         self.llm = OllamaClient()
 
         self.logger.info("Brain loaded")
@@ -220,6 +222,30 @@ Responde em português, de forma curta, prática e direta.
         result = self.handle_command(text)
         self.speak(result)
         return result
+
+    def listen_config(self):
+        return self.listener.config()
+
+    def set_listen_value(self, key, value):
+        return self.listener.set_value(key, value)
+
+    def listen_once(self, seconds=None):
+        return self.listener.listen_once(seconds)
+
+    def listen_and_handle(self, seconds=None):
+        heard = self.listen_once(seconds)
+
+        if heard.get("status") != "ok":
+            return heard
+
+        text = heard.get("text", "")
+        result = self.handle_command_voice(text)
+
+        return {
+            "status": "handled_voice_command",
+            "heard": text,
+            "result": result
+        }
 
     def tick(self):
         self.scheduler.run(self.agents)
