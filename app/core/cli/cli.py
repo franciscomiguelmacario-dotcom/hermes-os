@@ -1,4 +1,3 @@
-
 class CLI:
 
     def __init__(self, brain, logger):
@@ -19,21 +18,31 @@ class CLI:
                 self.logger.info({
                     "commands": [
                         "help",
+                        "jarvis <texto>",
+                        "ask <texto>",
+                        "health",
                         "status",
                         "memory",
                         "memory-key <key>",
+                        "backup",
+                        "backups",
+                        "restore-backup <filename>",
+                        "snapshot",
+                        "snapshots",
+                        "restore-snapshot <filename>",
                         "business",
                         "set-business <key> <value>",
-                        "health",
                         "tasks",
                         "clear-tasks",
                         "task <texto>",
                         "workflows",
-                        "dashboard",
                         "workflow dropshipping",
                         "next-action",
                         "autopilot",
                         "autopilot-cycle <steps>",
+                        "business-cycle",
+                        "cycle-history",
+                        "dashboard",
                         "report",
                         "export-report",
                         "export-report-md",
@@ -43,18 +52,20 @@ class CLI:
                         "patterns",
                         "history <agent>",
                         "priority <agent> <number>",
-                        "cycle-history",
                         "run <texto>",
                         "exit"
-                        "backup",
-                        "backups",
-                        "snapshot",
-                        "business-cycle",
-                        "snapshots",
-                        "restore-backup <filename>",
-                        "restore-snapshot <filename>", 
                     ]
                 })
+                continue
+
+            if cmd.startswith("jarvis "):
+                text = cmd.replace("jarvis ", "", 1).strip()
+                self.logger.info(self.brain.handle_command(text))
+                continue
+
+            if cmd.startswith("ask "):
+                text = cmd.replace("ask ", "", 1).strip()
+                self.logger.info(self.brain.handle_command(text))
                 continue
 
             if cmd == "health":
@@ -78,22 +89,22 @@ class CLI:
                 self.logger.info(self.brain.list_backups())
                 continue
 
-            if cmd == "snapshot":
-                self.logger.info(self.brain.create_snapshot())
+            if cmd.startswith("restore-backup "):
+                filename = cmd.replace("restore-backup ", "", 1).strip()
+                self.logger.info(self.brain.restore_backup(filename))
                 continue
 
-            if cmd.startswith("restore-snapshot "):
-                filename = cmd.replace("restore-snapshot ", "", 1).strip()
-                self.logger.info(self.brain.restore_snapshot(filename))
+            if cmd == "snapshot":
+                self.logger.info(self.brain.create_snapshot())
                 continue
 
             if cmd == "snapshots":
                 self.logger.info(self.brain.list_snapshots())
                 continue
 
-            if cmd.startswith("restore-backup "):
-                filename = cmd.replace("restore-backup ", "", 1).strip()
-                self.logger.info(self.brain.restore_backup(filename))
+            if cmd.startswith("restore-snapshot "):
+                filename = cmd.replace("restore-snapshot ", "", 1).strip()
+                self.logger.info(self.brain.restore_snapshot(filename))
                 continue
 
             if cmd == "memory":
@@ -134,14 +145,6 @@ class CLI:
                 self.logger.info(task)
                 continue
 
-            if cmd == "business-cycle":
-                self.logger.info(self.brain.run_business_cycle())
-                continue
-
-            if cmd == "cycle-history":
-                self.logger.info(self.brain.business_cycle_history())
-                continue
-
             if cmd == "workflows":
                 self.logger.info(self.brain.workflows.list())
                 continue
@@ -168,6 +171,14 @@ class CLI:
                     max_steps = int(parts[1])
 
                 self.logger.info(self.brain.autopilot_cycle(max_steps))
+                continue
+
+            if cmd == "business-cycle":
+                self.logger.info(self.brain.run_business_cycle())
+                continue
+
+            if cmd == "cycle-history":
+                self.logger.info(self.brain.business_cycle_history())
                 continue
 
             if cmd == "dashboard":

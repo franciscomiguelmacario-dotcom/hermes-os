@@ -1,7 +1,3 @@
-from app.core.dashboard.dashboard_engine import DashboardEngine
-from app.core.cycles.business_cycle import BusinessCycle
-from app.core.snapshot.snapshot_engine import SnapshotEngine
-from app.core.backup.backup_engine import BackupEngine
 from app.core.agents.base_agent import BaseAgent
 from app.core.agents.agent_loader import AgentLoader
 from app.core.plugins.plugin_loader import PluginLoader
@@ -14,6 +10,11 @@ from app.core.business.business_profile import BusinessProfile
 from app.core.decision.decision_engine import DecisionEngine
 from app.core.autopilot.autopilot_engine import AutopilotEngine
 from app.core.health.health_check import HealthCheck
+from app.core.backup.backup_engine import BackupEngine
+from app.core.snapshot.snapshot_engine import SnapshotEngine
+from app.core.cycles.business_cycle import BusinessCycle
+from app.core.dashboard.dashboard_engine import DashboardEngine
+from app.core.command_center.command_center import CommandCenter
 
 
 class Brain:
@@ -50,14 +51,11 @@ class Brain:
         self.plugins.load(self, bus, memory)
 
         self.health = HealthCheck(self)
-
         self.backup = BackupEngine(memory)
-
         self.snapshot = SnapshotEngine(self)
-
         self.business_cycle = BusinessCycle(self, logger)
-
         self.dashboard = DashboardEngine(self)
+        self.command_center = CommandCenter(self, logger)
 
         self.logger.info("Brain loaded")
 
@@ -180,6 +178,9 @@ class Brain:
 
     def dashboard_data(self):
         return self.dashboard.data()
+
+    def handle_command(self, text):
+        return self.command_center.handle(text)
 
     def tick(self):
         self.scheduler.run(self.agents)
