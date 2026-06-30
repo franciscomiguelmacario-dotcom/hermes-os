@@ -10,7 +10,9 @@ class DropshippingAutopilot:
         order_manager,
         sales_analytics,
         memory,
-        logger=None
+        logger=None,
+        notifications=None,
+        customer_support=None
     ):
         self.launch_pipeline = launch_pipeline
         self.campaign_manager = campaign_manager
@@ -18,6 +20,8 @@ class DropshippingAutopilot:
         self.sales_analytics = sales_analytics
         self.memory = memory
         self.logger = logger
+        self.notifications = notifications
+        self.customer_support = customer_support
 
     def config(self):
         default = {
@@ -30,7 +34,9 @@ class DropshippingAutopilot:
             "allow_campaign_launch": True,
             "allow_campaign_simulation": True,
             "allow_campaign_optimization": True,
-            "allow_auto_fulfillment": True
+            "allow_auto_fulfillment": True,
+            "allow_support_auto_reply": True,
+            "allow_send_notifications": True
         }
 
         saved = self.memory.get("store_autopilot_config", {})
@@ -179,19 +185,16 @@ class DropshippingAutopilot:
             product_launch = self.launch_pipeline.launch_best_product(
                 margin_percent
             )
-
-            steps.append({
-                "step": "launch_best_product",
-                "result": product_launch
-            })
         else:
-            steps.append({
-                "step": "launch_best_product",
-                "result": {
-                    "status": "skipped",
-                    "message": "product launch disabled or active product already exists"
-                }
-            })
+            product_launch = {
+                "status": "skipped",
+                "message": "product launch disabled or active product already exists"
+            }
+
+        steps.append({
+            "step": "launch_best_product",
+            "result": product_launch
+        })
 
         if config.get("allow_campaign_creation"):
             campaign_created = self.campaign_manager.create_for_best_active_product(
@@ -215,19 +218,16 @@ class DropshippingAutopilot:
         ):
             campaign = campaign_created.get("campaign", {})
             launched = self.campaign_manager.launch_campaign(campaign["id"])
-
-            steps.append({
-                "step": "launch_campaign",
-                "result": launched
-            })
         else:
-            steps.append({
-                "step": "launch_campaign",
-                "result": {
-                    "status": "skipped",
-                    "message": "campaign launch disabled or no campaign created"
-                }
-            })
+            launched = {
+                "status": "skipped",
+                "message": "campaign launch disabled or no campaign created"
+            }
+
+        steps.append({
+            "step": "launch_campaign",
+            "result": launched
+        })
 
         simulations = []
 
@@ -246,6 +246,7 @@ class DropshippingAutopilot:
 
         if config.get("allow_campaign_optimization"):
             optimization = self.campaign_manager.optimize_campaigns()
+            self.create_campaign_notifications(optimization)
         else:
             optimization = {
                 "status": "skipped",
@@ -261,6 +262,7 @@ class DropshippingAutopilot:
             fulfillment = self.order_manager.auto_fulfill_pending(
                 tracking_prefix
             )
+            self.create_shipping_notifications(fulfillment)
         else:
             fulfillment = {
                 "status": "skipped",
@@ -270,6 +272,38 @@ class DropshippingAutopilot:
         steps.append({
             "step": "auto_fulfill_orders",
             "result": fulfillment
+        })
+
+        if (
+            config.get("allow_support_auto_reply")
+            and self.customer_support
+        ):
+            support = self.customer_support.auto_reply_all()
+        else:
+            support = {
+                "status": "skipped",
+                "message": "support auto reply disabled or unavailable"
+            }
+
+        steps.append({
+            "step": "auto_reply_support",
+            "result": support
+        })
+
+        if (
+            config.get("allow_send_notifications")
+            and self.notifications
+        ):
+            notification_send = self.notifications.send_pending()
+        else:
+            notification_send = {
+                "status": "skipped",
+                "message": "send notifications disabled or unavailable"
+            }
+
+        steps.append({
+            "step": "send_notifications",
+            "result": notification_send
         })
 
         sales_report = self.sales_analytics.profit_report()
@@ -293,6 +327,32 @@ class DropshippingAutopilot:
         self.save_cycle(cycle)
 
         return cycle
+
+    def create_campaign_notifications(self, optimization):
+        if not self.notifications:
+            return
+
+        for item in optimization.get("results", []):
+            campaign = self.campaign_manager.get_campaign(
+                item.get("campaign_id")
+            )
+
+            if campaign:
+                self.notifications.campaign_alert(
+                    campaign,
+                    item.get("action"),
+                    item.get("reason")
+                )
+
+    def create_shipping_notifications(self, fulfillment):
+        if not self.notifications:
+            return
+
+        for item in fulfillment.get("batch", {}).get("results", []):
+            if item.get("status") == "order_fulfilled":
+                self.notifications.shipping_confirmation(
+                    item.get("order")
+                )
 
     def save_cycle(self, cycle):
         history = self.memory.get("store_autopilot_history", [])

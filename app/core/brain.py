@@ -118,7 +118,9 @@ class Brain:
             self.order_manager,
             self.sales_analytics,
             memory,
-            logger
+            logger,
+            self.notifications,
+            self.customer_support
         )
 
         self.decisions = DecisionEngine(memory, self.tasks)
