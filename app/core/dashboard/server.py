@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 
 from app.core.startup import Hermes
 
+
 def create_app():
     hermes = Hermes()
     hermes.kernel.boot()
@@ -82,6 +83,7 @@ def create_app():
 
     <button onclick="loadDashboard()">Refresh</button>
     <button onclick="runAction('/api/action/autopilot')">Autopilot</button>
+    <button onclick="runAction('/api/action/autopilot-cycle')">Autopilot Cycle</button>
     <button onclick="runAction('/api/action/business-cycle')">Business Cycle</button>
     <button onclick="runAction('/api/action/export-obsidian')">Export Obsidian</button>
     <button onclick="runAction('/api/action/backup')">Backup</button>
@@ -225,6 +227,10 @@ def create_app():
     @app.route("/api/action/autopilot", methods=["POST"])
     def action_autopilot():
         return jsonify(hermes.brain.autopilot_once())
+
+    @app.route("/api/action/autopilot-cycle", methods=["POST"])
+    def action_autopilot_cycle():
+        return jsonify(hermes.brain.autopilot_cycle(5))
 
     @app.route("/api/action/business-cycle", methods=["POST"])
     def action_business_cycle():
