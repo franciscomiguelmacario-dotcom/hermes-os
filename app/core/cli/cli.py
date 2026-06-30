@@ -54,6 +54,15 @@ class CLI:
                         "pending-notifications",
                         "send-notifications",
                         "notification-batches",
+                        "support-tickets",
+                        "pending-support",
+                        "support-ticket <id>",
+                        "create-support-ticket <email> | <subject> | <message> | <order_id>",
+                        "reply-support-ticket <id> | <message>",
+                        "close-support-ticket <id>",
+                        "auto-reply-support <id>",
+                        "auto-reply-support-all",
+                        "support-batches",
                         "store-autopilot-config",
                         "set-store-autopilot <key> <value>",
                         "store-autopilot-safety <budget>",
@@ -309,6 +318,68 @@ class CLI:
                 self.logger.info(self.brain.notification_batches())
                 continue
 
+            if cmd == "support-tickets":
+                self.logger.info(self.brain.support_tickets())
+                continue
+
+            if cmd == "pending-support":
+                self.logger.info(self.brain.pending_support_tickets())
+                continue
+
+            if cmd.startswith("support-ticket "):
+                ticket_id = cmd.replace("support-ticket ", "", 1).strip()
+                self.logger.info(self.brain.support_ticket_detail(ticket_id))
+                continue
+
+            if cmd.startswith("create-support-ticket "):
+                raw = cmd.replace("create-support-ticket ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                email = parts[0] if len(parts) > 0 else None
+                subject = parts[1] if len(parts) > 1 else None
+                message = parts[2] if len(parts) > 2 else None
+                order_id = parts[3] if len(parts) > 3 else None
+
+                self.logger.info(
+                    self.brain.create_support_ticket(
+                        email,
+                        subject,
+                        message,
+                        order_id
+                    )
+                )
+                continue
+
+            if cmd.startswith("reply-support-ticket "):
+                raw = cmd.replace("reply-support-ticket ", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|")]
+
+                ticket_id = parts[0]
+                message = parts[1] if len(parts) > 1 else ""
+
+                self.logger.info(
+                    self.brain.reply_support_ticket(ticket_id, message)
+                )
+                continue
+
+            if cmd.startswith("close-support-ticket "):
+                ticket_id = cmd.replace("close-support-ticket ", "", 1).strip()
+                self.logger.info(self.brain.close_support_ticket(ticket_id))
+                continue
+
+            if cmd.startswith("auto-reply-support "):
+                ticket_id = cmd.replace("auto-reply-support ", "", 1).strip()
+                self.logger.info(self.brain.auto_reply_support_ticket(ticket_id))
+                continue
+
+            if cmd == "auto-reply-support-all":
+                self.logger.info(self.brain.auto_reply_support_all())
+                continue
+
+            if cmd == "support-batches":
+                self.logger.info(self.brain.support_batches())
+                continue
+
             if cmd == "store-autopilot-config":
                 self.logger.info(self.brain.store_autopilot_config())
                 continue
@@ -336,6 +407,10 @@ class CLI:
                 )
                 continue
 
+            if cmd == "store-autopilot-history":
+                self.logger.info(self.brain.store_autopilot_history())
+                continue
+
             if cmd.startswith("store-autopilot"):
                 raw = cmd.replace("store-autopilot", "", 1).strip()
                 parts = [p.strip() for p in raw.split("|") if p.strip()]
@@ -353,10 +428,6 @@ class CLI:
                         tracking_prefix
                     )
                 )
-                continue
-
-            if cmd == "store-autopilot-history":
-                self.logger.info(self.brain.store_autopilot_history())
                 continue
 
             if cmd == "report":

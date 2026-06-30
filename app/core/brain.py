@@ -28,6 +28,7 @@ from app.core.orders.order_manager import OrderManager
 from app.core.analytics.sales_analytics import SalesAnalytics
 from app.core.campaigns.campaign_manager import CampaignManager
 from app.core.notifications.notification_center import NotificationCenter
+from app.core.customer_support.support_center import SupportCenter
 
 from app.core.command_center.command_center import CommandCenter
 from app.core.llm.ollama_client import OllamaClient
@@ -100,6 +101,13 @@ class Brain:
         )
 
         self.notifications = NotificationCenter(
+            memory,
+            logger
+        )
+
+        self.customer_support = SupportCenter(
+            self.order_manager,
+            self.notifications,
             memory,
             logger
         )
@@ -493,6 +501,55 @@ class Brain:
     def notification_batches(self):
         return self.notifications.batches()
 
+    def support_tickets(self):
+        return self.customer_support.all()
+
+    def pending_support_tickets(self):
+        return self.customer_support.pending()
+
+    def support_ticket_detail(self, ticket_id):
+        ticket = self.customer_support.get_ticket(ticket_id)
+
+        if not ticket:
+            return {
+                "status": "error",
+                "message": "support ticket not found"
+            }
+
+        return {
+            "status": "ok",
+            "ticket": ticket
+        }
+
+    def create_support_ticket(
+        self,
+        customer_email=None,
+        subject=None,
+        message=None,
+        order_id=None
+    ):
+        return self.customer_support.create_ticket(
+            customer_email,
+            subject,
+            message,
+            order_id
+        )
+
+    def reply_support_ticket(self, ticket_id, message):
+        return self.customer_support.reply_ticket(ticket_id, message)
+
+    def close_support_ticket(self, ticket_id):
+        return self.customer_support.close_ticket(ticket_id)
+
+    def auto_reply_support_ticket(self, ticket_id):
+        return self.customer_support.auto_reply(ticket_id)
+
+    def auto_reply_support_all(self):
+        return self.customer_support.auto_reply_all()
+
+    def support_batches(self):
+        return self.customer_support.batches()
+
     def store_autopilot_config(self):
         return self.store_autopilot.config()
 
@@ -574,7 +631,8 @@ class Brain:
             "campaigns": self.campaigns_all(),
             "campaign_performance": self.campaign_performance(),
             "store_autopilot_config": self.store_autopilot_config(),
-            "notifications": self.notifications_all()
+            "notifications": self.notifications_all(),
+            "support_tickets": self.support_tickets()
         }
 
         prompt = f"""
