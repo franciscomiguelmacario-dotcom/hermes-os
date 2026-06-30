@@ -43,6 +43,12 @@ class DashboardEngine:
 
         return masked
 
+    def latest_item(self, value):
+        if isinstance(value, list) and value:
+            return value[-1]
+
+        return None
+
     def data(self):
         products = self.safe("store_products", [])
         supplier_products = self.safe("supplier_products", [])
@@ -63,6 +69,9 @@ class DashboardEngine:
 
         store_api_config = self.safe("store_api_config", {})
         store_api_history = self.safe("store_api_history", [])
+
+        supplier_api_config = self.safe("supplier_api_config", {})
+        supplier_api_history = self.safe("supplier_api_history", [])
 
         active_products = [
             product for product in products
@@ -85,14 +94,6 @@ class DashboardEngine:
             if order.get("fulfillment_status") == "fulfilled"
         ]
 
-        latest_cycle = None
-        if isinstance(autopilot_history, list) and autopilot_history:
-            latest_cycle = autopilot_history[-1]
-
-        latest_store_sync = None
-        if isinstance(store_api_history, list) and store_api_history:
-            latest_store_sync = store_api_history[-1]
-
         dashboard = {
             "status": "dashboard_ready",
             "generated_at": datetime.now().isoformat(),
@@ -110,7 +111,8 @@ class DashboardEngine:
                 "pending_notifications": self.count_list(pending_notifications),
                 "support_tickets": self.count_list(support_tickets),
                 "pending_support": self.count_list(pending_support),
-                "store_api_events": self.count_list(store_api_history)
+                "store_api_events": self.count_list(store_api_history),
+                "supplier_api_events": self.count_list(supplier_api_history)
             },
             "money": {
                 "revenue": sales_summary.get("revenue", 0),
@@ -125,11 +127,16 @@ class DashboardEngine:
             "store_api": {
                 "config": self.mask_sensitive_config(store_api_config),
                 "history_count": self.count_list(store_api_history),
-                "latest_sync": latest_store_sync
+                "latest_sync": self.latest_item(store_api_history)
+            },
+            "supplier_api": {
+                "config": self.mask_sensitive_config(supplier_api_config),
+                "history_count": self.count_list(supplier_api_history),
+                "latest_sync": self.latest_item(supplier_api_history)
             },
             "autopilot": {
                 "config": autopilot_config,
-                "latest_cycle": latest_cycle,
+                "latest_cycle": self.latest_item(autopilot_history),
                 "cycles_count": self.count_list(autopilot_history)
             },
             "alerts": self.alerts(
@@ -138,7 +145,8 @@ class DashboardEngine:
                 pending_support,
                 active_campaigns,
                 sales_summary,
-                store_api_config
+                store_api_config,
+                supplier_api_config
             ),
             "next_recommended_actions": self.next_actions(
                 products,
@@ -147,7 +155,8 @@ class DashboardEngine:
                 pending_notifications,
                 pending_support,
                 active_campaigns,
-                store_api_config
+                store_api_config,
+                supplier_api_config
             )
         }
 
@@ -160,7 +169,8 @@ class DashboardEngine:
         pending_support,
         active_campaigns,
         sales_summary,
-        store_api_config
+        store_api_config,
+        supplier_api_config
     ):
         alerts = []
 
@@ -200,6 +210,18 @@ class DashboardEngine:
                 "message": "Store API está em modo dry-run. Nada será enviado para loja real."
             })
 
+        if not supplier_api_config.get("enabled"):
+            alerts.append({
+                "level": "info",
+                "message": "Supplier API ainda não está ativa."
+            })
+
+        if supplier_api_config.get("dry_run"):
+            alerts.append({
+                "level": "warning",
+                "message": "Supplier API está em modo dry-run. Nenhuma encomenda real será enviada ao fornecedor."
+            })
+
         profit = float(sales_summary.get("profit") or 0)
 
         if profit < 0:
@@ -224,7 +246,8 @@ class DashboardEngine:
         pending_notifications,
         pending_support,
         active_campaigns,
-        store_api_config
+        store_api_config,
+        supplier_api_config
     ):
         actions = []
 
@@ -238,7 +261,7 @@ class DashboardEngine:
             actions.append("Criar e lançar campanha para produto ativo.")
 
         if pending_orders:
-            actions.append("Processar encomendas pendentes com auto-fulfill-orders HER.")
+            actions.append("Processar encomendas pendentes ou enviar para fornecedor.")
 
         if pending_support:
             actions.append("Responder tickets com auto-reply-support-all.")
@@ -249,8 +272,14 @@ class DashboardEngine:
         if not store_api_config.get("enabled"):
             actions.append("Configurar ligação à loja real no painel Store API.")
 
+        if not supplier_api_config.get("enabled"):
+            actions.append("Configurar ligação ao fornecedor no painel Supplier API.")
+
         if store_api_config.get("dry_run"):
-            actions.append("Manter dry-run enquanto testas. Desativa apenas quando tiveres certeza.")
+            actions.append("Manter Store API em dry-run enquanto testas.")
+
+        if supplier_api_config.get("dry_run"):
+            actions.append("Manter Supplier API em dry-run enquanto testas.")
 
         if not actions:
             actions.append("Executar store-autopilot 40 | 10 | facebook_ads | HER.")

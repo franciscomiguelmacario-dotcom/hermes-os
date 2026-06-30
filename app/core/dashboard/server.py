@@ -18,7 +18,6 @@ PAGE = """
         :root {
             --bg: #030712;
             --panel: rgba(15, 23, 42, 0.72);
-            --panel-strong: rgba(15, 23, 42, 0.95);
             --border: rgba(56, 189, 248, 0.28);
             --border-soft: rgba(148, 163, 184, 0.18);
             --cyan: #22d3ee;
@@ -139,6 +138,11 @@ PAGE = """
             margin-top: 5px;
             font-size: 14px;
             letter-spacing: 0.8px;
+        }
+
+        .small {
+            color: var(--muted);
+            font-size: 12px;
         }
 
         .system-status {
@@ -320,7 +324,7 @@ PAGE = """
             color: var(--cyan);
         }
 
-        input {
+        input, select {
             width: 100%;
             margin-bottom: 8px;
             padding: 11px 12px;
@@ -331,9 +335,18 @@ PAGE = """
             outline: none;
         }
 
-        input:focus {
-            border-color: rgba(34, 211, 238, 0.70);
-            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.10);
+        label {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
         }
 
         button {
@@ -446,10 +459,6 @@ PAGE = """
             text-decoration: none;
             background: rgba(2, 6, 23, 0.44);
             font-size: 13px;
-        }
-
-        .link-chip:hover {
-            background: rgba(34, 211, 238, 0.12);
         }
 
         .wide {
@@ -615,15 +624,23 @@ PAGE = """
             </div>
 
             <div class="metric-card">
-                <div class="metric-title">Suporte</div>
-                <div class="metric-value">{{ summary.get("support_tickets", 0) }}</div>
-                <div class="metric-sub">Abertos: {{ summary.get("pending_support", 0) }}</div>
+                <div class="metric-title">Store API</div>
+                <div class="metric-value">{{ summary.get("store_api_events", 0) }}</div>
+                <div class="metric-sub">
+                    {{ store_api.get("config", {}).get("provider", "dry_run") }}
+                    /
+                    {% if store_api.get("config", {}).get("dry_run") %}dry-run{% else %}real{% endif %}
+                </div>
             </div>
 
             <div class="metric-card">
-                <div class="metric-title">Fulfillment</div>
-                <div class="metric-value">{{ summary.get("fulfilled_orders", 0) }}</div>
-                <div class="metric-sub">Encomendas enviadas</div>
+                <div class="metric-title">Supplier API</div>
+                <div class="metric-value">{{ summary.get("supplier_api_events", 0) }}</div>
+                <div class="metric-sub">
+                    {{ supplier_api.get("config", {}).get("provider", "dry_run") }}
+                    /
+                    {% if supplier_api.get("config", {}).get("dry_run") %}dry-run{% else %}real{% endif %}
+                </div>
             </div>
         </section>
 
@@ -664,38 +681,148 @@ PAGE = """
                             <button type="submit">Criar encomenda</button>
                         </form>
 
-                        <form method="post" action="/action/create-support-ticket">
-                            <h3>Criar ticket suporte</h3>
-                            <input name="email" placeholder="Email cliente" value="teste@email.com">
-                            <input name="subject" placeholder="Assunto" value="Onde está a encomenda?">
-                            <input name="message" placeholder="Mensagem" value="Quero saber o tracking">
-                            <input name="order_id" placeholder="ID encomenda" value="1">
-                            <button type="submit">Criar ticket</button>
-                        </form>
-
                         <form method="post" action="/action/send-notifications">
                             <h3>Comunicações</h3>
                             <button type="submit">Enviar notificações pendentes</button>
-                        </form>
-
-                        <form method="post" action="/action/auto-reply-support">
-                            <h3>Suporte IA</h3>
-                            <button type="submit">Responder suporte automaticamente</button>
-                        </form>
-
-                        <form method="post" action="/action/optimize-campaigns">
-                            <h3>Marketing</h3>
-                            <button type="submit">Otimizar campanhas</button>
-                        </form>
-
-                        <form method="post" action="/action/simulate-campaigns">
-                            <h3>Simulação</h3>
-                            <button type="submit">Simular campanhas ativas</button>
                         </form>
                     </div>
                 </div>
             </div>
 
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Store API Bridge</h2>
+                    <span class="small">Shopify / WooCommerce</span>
+                </div>
+
+                <div class="panel-body">
+                    <form method="post" action="/action/store-api-config">
+                        <h3>Configurar loja real</h3>
+
+                        <select name="provider">
+                            <option value="dry_run" {% if store_api.get("config", {}).get("provider") == "dry_run" %}selected{% endif %}>Dry Run</option>
+                            <option value="shopify" {% if store_api.get("config", {}).get("provider") == "shopify" %}selected{% endif %}>Shopify</option>
+                            <option value="woocommerce" {% if store_api.get("config", {}).get("provider") == "woocommerce" %}selected{% endif %}>WooCommerce</option>
+                            <option value="custom" {% if store_api.get("config", {}).get("provider") == "custom" %}selected{% endif %}>Custom API</option>
+                        </select>
+
+                        <input name="base_url" placeholder="Base URL da loja" value="{{ store_api.get("config", {}).get("base_url", "") }}">
+                        <input name="access_token" placeholder="Access token / Bearer token" type="password">
+                        <input name="api_key" placeholder="API key" type="password">
+                        <input name="api_secret" placeholder="API secret" type="password">
+
+                        <label>
+                            <input type="checkbox" name="enabled" {% if store_api.get("config", {}).get("enabled") %}checked{% endif %}>
+                            Ativar Store API
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="dry_run" {% if store_api.get("config", {}).get("dry_run") %}checked{% endif %}>
+                            Modo seguro dry-run
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="auto_sync_on_publish" {% if store_api.get("config", {}).get("auto_sync_on_publish") %}checked{% endif %}>
+                            Auto sync ao publicar produto
+                        </label>
+
+                        <button type="submit">Guardar Store API</button>
+                    </form>
+
+                    <div style="height: 14px;"></div>
+
+                    <form method="post" action="/action/push-product-store">
+                        <h3>Enviar produto específico</h3>
+                        <input name="product_id" placeholder="ID produto" value="1">
+                        <button type="submit">Preparar / enviar produto</button>
+                    </form>
+
+                    <div style="height: 14px;"></div>
+
+                    <form method="post" action="/action/sync-store-products">
+                        <h3>Sincronizar produtos ativos</h3>
+                        <button type="submit">Sincronizar loja</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Supplier API Bridge</h2>
+                    <span class="small">Fornecedor / fulfillment real</span>
+                </div>
+
+                <div class="panel-body">
+                    <form method="post" action="/action/supplier-api-config">
+                        <h3>Configurar fornecedor</h3>
+
+                        <select name="provider">
+                            <option value="dry_run" {% if supplier_api.get("config", {}).get("provider") == "dry_run" %}selected{% endif %}>Dry Run</option>
+                            <option value="custom" {% if supplier_api.get("config", {}).get("provider") == "custom" %}selected{% endif %}>Custom API</option>
+                            <option value="aliexpress" {% if supplier_api.get("config", {}).get("provider") == "aliexpress" %}selected{% endif %}>AliExpress</option>
+                            <option value="cj_dropshipping" {% if supplier_api.get("config", {}).get("provider") == "cj_dropshipping" %}selected{% endif %}>CJ Dropshipping</option>
+                        </select>
+
+                        <input name="base_url" placeholder="Base URL do fornecedor" value="{{ supplier_api.get("config", {}).get("base_url", "") }}">
+                        <input name="access_token" placeholder="Access token / Bearer token" type="password">
+                        <input name="api_key" placeholder="API key" type="password">
+                        <input name="api_secret" placeholder="API secret" type="password">
+
+                        <label>
+                            <input type="checkbox" name="enabled" {% if supplier_api.get("config", {}).get("enabled") %}checked{% endif %}>
+                            Ativar Supplier API
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="dry_run" {% if supplier_api.get("config", {}).get("dry_run") %}checked{% endif %}>
+                            Modo seguro dry-run
+                        </label>
+
+                        <button type="submit">Guardar Supplier API</button>
+                    </form>
+
+                    <div style="height: 14px;"></div>
+
+                    <form method="post" action="/action/submit-order-supplier">
+                        <h3>Enviar encomenda específica</h3>
+                        <input name="order_id" placeholder="ID encomenda" value="1">
+                        <button type="submit">Preparar / enviar encomenda</button>
+                    </form>
+
+                    <div style="height: 14px;"></div>
+
+                    <form method="post" action="/action/submit-pending-orders-supplier">
+                        <h3>Enviar encomendas pendentes</h3>
+                        <button type="submit">Processar pendentes no fornecedor</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">API Logs</h2>
+                    <span class="small">Histórico de integrações</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="terminal">
+                        <div class="terminal-top">Store API Config</div>
+                        <pre>{{ store_api_config }}</pre>
+                    </div>
+
+                    <div style="height: 14px;"></div>
+
+                    <div class="terminal">
+                        <div class="terminal-top">Supplier API Config</div>
+                        <pre>{{ supplier_api_config }}</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">System Links</h2>
@@ -710,6 +837,8 @@ PAGE = """
                         <a class="link-chip" href="/api/campaigns" target="_blank">Campanhas</a>
                         <a class="link-chip" href="/api/notifications" target="_blank">Notificações</a>
                         <a class="link-chip" href="/api/support" target="_blank">Suporte</a>
+                        <a class="link-chip" href="/api/store-api" target="_blank">Store API</a>
+                        <a class="link-chip" href="/api/supplier-api" target="_blank">Supplier API</a>
                     </div>
 
                     <div style="height: 18px;"></div>
@@ -717,6 +846,27 @@ PAGE = """
                     <div class="terminal">
                         <div class="terminal-top">Autopilot Config</div>
                         <pre>{{ autopilot_config }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Latest API Events</h2>
+                    <span class="small">Últimos envios</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="terminal">
+                        <div class="terminal-top">Store API Last Event</div>
+                        <pre>{{ store_api_history }}</pre>
+                    </div>
+
+                    <div style="height: 14px;"></div>
+
+                    <div class="terminal">
+                        <div class="terminal-top">Supplier API Last Event</div>
+                        <pre>{{ supplier_api_history }}</pre>
                     </div>
                 </div>
             </div>
@@ -767,12 +917,30 @@ def create_app():
     def brain():
         return app.config["HERMES"].brain
 
+    def mask_sensitive_config(config):
+        if not isinstance(config, dict):
+            return config
+
+        masked = dict(config)
+
+        for key in ["api_key", "api_secret", "access_token"]:
+            value = masked.get(key)
+
+            if value:
+                masked[key] = "***configured***"
+            else:
+                masked[key] = ""
+
+        return masked
+
     def json_text(value):
         return json.dumps(value, indent=2, ensure_ascii=False)
 
     @app.route("/", methods=["GET"])
     def index():
         data = brain().dashboard_data()
+        store_api = data.get("store_api", {})
+        supplier_api = data.get("supplier_api", {})
 
         return render_template_string(
             PAGE,
@@ -782,8 +950,22 @@ def create_app():
             alerts=data.get("alerts", []),
             actions=data.get("next_recommended_actions", []),
             autopilot=data.get("autopilot", {}),
+            store_api=store_api,
+            supplier_api=supplier_api,
             autopilot_config=json_text(
                 data.get("autopilot", {}).get("config", {})
+            ),
+            store_api_config=json_text(
+                store_api.get("config", {})
+            ),
+            supplier_api_config=json_text(
+                supplier_api.get("config", {})
+            ),
+            store_api_history=json_text(
+                store_api.get("latest_sync", {})
+            ),
+            supplier_api_history=json_text(
+                supplier_api.get("latest_sync", {})
             ),
             raw=json_text(data)
         )
@@ -811,6 +993,20 @@ def create_app():
     @app.route("/api/support", methods=["GET"])
     def api_support():
         return jsonify(brain().support_tickets())
+
+    @app.route("/api/store-api", methods=["GET"])
+    def api_store_api():
+        return jsonify({
+            "config": mask_sensitive_config(brain().store_api_config()),
+            "history": brain().store_api_history()
+        })
+
+    @app.route("/api/supplier-api", methods=["GET"])
+    def api_supplier_api():
+        return jsonify({
+            "config": mask_sensitive_config(brain().supplier_api_config()),
+            "history": brain().supplier_api_history()
+        })
 
     @app.route("/action/store-autopilot", methods=["POST"])
     def action_store_autopilot():
@@ -846,38 +1042,112 @@ def create_app():
 
         return redirect(url_for("index"))
 
-    @app.route("/action/create-support-ticket", methods=["POST"])
-    def action_create_support_ticket():
-        brain().create_support_ticket(
-            request.form.get("email"),
-            request.form.get("subject"),
-            request.form.get("message"),
-            request.form.get("order_id")
-        )
-
-        return redirect(url_for("index"))
-
     @app.route("/action/send-notifications", methods=["POST"])
     def action_send_notifications():
         brain().send_notifications()
         return redirect(url_for("index"))
 
-    @app.route("/action/auto-reply-support", methods=["POST"])
-    def action_auto_reply_support():
-        brain().auto_reply_support_all()
+    @app.route("/action/store-api-config", methods=["POST"])
+    def action_store_api_config():
+        brain().set_store_api_config(
+            "provider",
+            request.form.get("provider", "dry_run")
+        )
+
+        brain().set_store_api_config(
+            "base_url",
+            request.form.get("base_url", "")
+        )
+
+        brain().set_store_api_config(
+            "enabled",
+            "enabled" in request.form
+        )
+
+        brain().set_store_api_config(
+            "dry_run",
+            "dry_run" in request.form
+        )
+
+        brain().set_store_api_config(
+            "auto_sync_on_publish",
+            "auto_sync_on_publish" in request.form
+        )
+
+        access_token = request.form.get("access_token", "").strip()
+        api_key = request.form.get("api_key", "").strip()
+        api_secret = request.form.get("api_secret", "").strip()
+
+        if access_token:
+            brain().set_store_api_config("access_token", access_token)
+
+        if api_key:
+            brain().set_store_api_config("api_key", api_key)
+
+        if api_secret:
+            brain().set_store_api_config("api_secret", api_secret)
+
         return redirect(url_for("index"))
 
-    @app.route("/action/optimize-campaigns", methods=["POST"])
-    def action_optimize_campaigns():
-        brain().optimize_campaigns()
+    @app.route("/action/push-product-store", methods=["POST"])
+    def action_push_product_store():
+        product_id = request.form.get("product_id", "1")
+        brain().push_product_to_store(product_id)
+
         return redirect(url_for("index"))
 
-    @app.route("/action/simulate-campaigns", methods=["POST"])
-    def action_simulate_campaigns():
-        for campaign in brain().campaigns_all():
-            if campaign.get("status") == "active":
-                brain().simulate_campaign(campaign.get("id"))
+    @app.route("/action/sync-store-products", methods=["POST"])
+    def action_sync_store_products():
+        brain().sync_products_to_store()
+        return redirect(url_for("index"))
 
+    @app.route("/action/supplier-api-config", methods=["POST"])
+    def action_supplier_api_config():
+        brain().set_supplier_api_config(
+            "provider",
+            request.form.get("provider", "dry_run")
+        )
+
+        brain().set_supplier_api_config(
+            "base_url",
+            request.form.get("base_url", "")
+        )
+
+        brain().set_supplier_api_config(
+            "enabled",
+            "enabled" in request.form
+        )
+
+        brain().set_supplier_api_config(
+            "dry_run",
+            "dry_run" in request.form
+        )
+
+        access_token = request.form.get("access_token", "").strip()
+        api_key = request.form.get("api_key", "").strip()
+        api_secret = request.form.get("api_secret", "").strip()
+
+        if access_token:
+            brain().set_supplier_api_config("access_token", access_token)
+
+        if api_key:
+            brain().set_supplier_api_config("api_key", api_key)
+
+        if api_secret:
+            brain().set_supplier_api_config("api_secret", api_secret)
+
+        return redirect(url_for("index"))
+
+    @app.route("/action/submit-order-supplier", methods=["POST"])
+    def action_submit_order_supplier():
+        order_id = request.form.get("order_id", "1")
+        brain().submit_order_to_supplier(order_id)
+
+        return redirect(url_for("index"))
+
+    @app.route("/action/submit-pending-orders-supplier", methods=["POST"])
+    def action_submit_pending_orders_supplier():
+        brain().submit_pending_orders_to_supplier()
         return redirect(url_for("index"))
 
     return app
