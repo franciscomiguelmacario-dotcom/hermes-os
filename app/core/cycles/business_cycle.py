@@ -12,7 +12,6 @@ class BusinessCycle:
         cycle_started = datetime.now().isoformat()
 
         before = self.brain.create_snapshot()
-
         workflow = self.brain.run_workflow("dropshipping")
 
         time.sleep(wait_seconds)
@@ -46,3 +45,6 @@ class BusinessCycle:
         self.brain.memory.set("business_cycles", history)
 
         return result
+
+    def history(self):
+        return self.brain.memory.get("business_cycles", [])

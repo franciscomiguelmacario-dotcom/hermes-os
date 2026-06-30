@@ -172,6 +172,9 @@ class Brain:
     def run_business_cycle(self, wait_seconds=8):
         return self.business_cycle.run_dropshipping_cycle(wait_seconds)
 
+    def business_cycle_history(self):
+        return self.business_cycle.history()
+
     def tick(self):
         self.scheduler.run(self.agents)
 

@@ -42,6 +42,7 @@ class CLI:
                         "patterns",
                         "history <agent>",
                         "priority <agent> <number>",
+                        "cycle-history",
                         "run <texto>",
                         "exit"
                         "backup",
@@ -134,6 +135,10 @@ class CLI:
 
             if cmd == "business-cycle":
                 self.logger.info(self.brain.run_business_cycle())
+                continue
+
+            if cmd == "cycle-history":
+                self.logger.info(self.brain.business_cycle_history())
                 continue
 
             if cmd == "workflows":
