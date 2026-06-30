@@ -12,13 +12,115 @@ def create_app():
     @app.route("/")
     def home():
         return """
-        <h1>Hermes Dashboard</h1>
-        <ul>
-            <li><a href="/api/dashboard">Dashboard Data</a></li>
-            <li><a href="/api/health">Health</a></li>
-            <li><a href="/api/report">Report</a></li>
-            <li><a href="/api/tasks">Tasks</a></li>
-        </ul>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hermes Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #eee;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: #1d1d1d;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #000;
+            padding: 12px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow: auto;
+        }
+
+        button {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hermes Dashboard</h1>
+    <p>Business automation control panel</p>
+
+    <button onclick="loadDashboard()">Refresh</button>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Health</h2>
+            <pre id="health">Loading...</pre>
+        </div>
+
+        <div class="card">
+            <h2>Business Profile</h2>
+            <pre id="business">Loading...</pre>
+        </div>
+
+        <div class="card">
+            <h2>Next Action</h2>
+            <pre id="next">Loading...</pre>
+        </div>
+
+        <div class="card">
+            <h2>Tasks</h2>
+            <pre id="tasks">Loading...</pre>
+        </div>
+
+        <div class="card">
+            <h2>Agents</h2>
+            <pre id="agents">Loading...</pre>
+        </div>
+
+        <div class="card">
+            <h2>Cycle History</h2>
+            <pre id="cycles">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            const response = await fetch("/api/dashboard");
+            const data = await response.json();
+
+            document.getElementById("health").textContent = JSON.stringify(data.health, null, 2);
+            document.getElementById("business").textContent = JSON.stringify(data.business_profile, null, 2);
+            document.getElementById("next").textContent = JSON.stringify(data.next_action, null, 2);
+            document.getElementById("tasks").textContent = JSON.stringify(data.tasks, null, 2);
+            document.getElementById("agents").textContent = JSON.stringify(data.agents, null, 2);
+            document.getElementById("cycles").textContent = JSON.stringify(data.cycle_history, null, 2);
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
         """
 
     @app.route("/api/dashboard")
