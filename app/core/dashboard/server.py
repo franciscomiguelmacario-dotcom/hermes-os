@@ -245,7 +245,8 @@ PAGE = """
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             margin-bottom: 8px;
             padding: 11px 12px;
@@ -254,6 +255,14 @@ PAGE = """
             border-radius: 12px;
             background: rgba(2, 6, 23, 0.74);
             outline: none;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+            font-family: monospace;
+            font-size: 12px;
         }
 
         label {
@@ -451,9 +460,9 @@ PAGE = """
                         </div>
 
                         <div class="metric-card">
-                            <div class="metric-title">Campanhas</div>
-                            <div class="metric-value">{{ summary.get('campaigns', 0) }}</div>
-                            <div class="metric-sub">Ativas: {{ summary.get('active_campaigns', 0) }}</div>
+                            <div class="metric-title">Importadas</div>
+                            <div class="metric-value">{{ summary.get('imported_orders', 0) }}</div>
+                            <div class="metric-sub">Via Order Intake</div>
                         </div>
 
                         <div class="metric-card">
@@ -492,9 +501,9 @@ PAGE = """
 
         <section class="grid">
             <div class="metric-card">
-                <div class="metric-title">Fornecedor</div>
-                <div class="metric-value">{{ summary.get('supplier_products', 0) }}</div>
-                <div class="metric-sub">Produtos disponíveis</div>
+                <div class="metric-title">Order Intake</div>
+                <div class="metric-value">{{ summary.get('order_intake_events', 0) }}</div>
+                <div class="metric-sub">Eventos de entrada</div>
             </div>
 
             <div class="metric-card">
@@ -527,6 +536,44 @@ PAGE = """
         <section class="layout">
             <div class="panel">
                 <div class="panel-header">
+                    <h2 class="panel-title">Order Intake Engine</h2>
+                    <span class="small">Receber encomendas da loja</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="actions-grid">
+                        <form method="post" action="/action/import-test-order">
+                            <h3>Importar encomenda teste</h3>
+                            <input name="product_id" value="1" placeholder="ID produto">
+                            <input name="customer_name" value="Francisco" placeholder="Cliente">
+                            <input name="customer_email" value="teste@email.com" placeholder="Email">
+                            <input name="quantity" value="1" placeholder="Quantidade">
+                            <button type="submit">Importar encomenda teste</button>
+                        </form>
+
+                        <form method="post" action="/action/import-order-json">
+                            <h3>Importar JSON externo</h3>
+                            <select name="provider">
+                                <option value="custom">Custom</option>
+                                <option value="shopify">Shopify</option>
+                                <option value="woocommerce">WooCommerce</option>
+                            </select>
+                            <textarea name="payload">{"id":"EXT-1001","product_id":1,"quantity":1,"customer_name":"Cliente Externo","customer_email":"cliente@email.com","shipping_address":{"address1":"Rua Exemplo 1","city":"Lisboa","country":"Portugal","postal_code":"1000-000"}}</textarea>
+                            <button type="submit">Importar JSON</button>
+                        </form>
+                    </div>
+
+                    <div style="height: 14px;"></div>
+
+                    <div class="terminal">
+                        <div class="terminal-top">Último evento Order Intake</div>
+                        <pre>{{ order_intake_latest }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
                     <h2 class="panel-title">Quick Actions</h2>
                     <span class="small">Operação</span>
                 </div>
@@ -551,24 +598,12 @@ PAGE = """
                             <input name="category" value="gadgets" placeholder="Categoria">
                             <button type="submit">Adicionar</button>
                         </form>
-
-                        <form method="post" action="/action/create-order">
-                            <h3>Criar encomenda teste</h3>
-                            <input name="product_id" value="1" placeholder="ID produto">
-                            <input name="customer_name" value="Francisco" placeholder="Cliente">
-                            <input name="customer_email" value="teste@email.com" placeholder="Email">
-                            <input name="quantity" value="1" placeholder="Quantidade">
-                            <button type="submit">Criar encomenda</button>
-                        </form>
-
-                        <form method="post" action="/action/send-notifications">
-                            <h3>Comunicações</h3>
-                            <button type="submit">Enviar notificações</button>
-                        </form>
                     </div>
                 </div>
             </div>
+        </section>
 
+        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Fulfillment Pipeline</h2>
@@ -595,9 +630,9 @@ PAGE = """
                             <button type="submit">Marcar como enviada</button>
                         </form>
 
-                        <form method="post" action="/action/auto-reply-support">
-                            <h3>Suporte IA</h3>
-                            <button type="submit">Responder suporte</button>
+                        <form method="post" action="/action/send-notifications">
+                            <h3>Comunicações</h3>
+                            <button type="submit">Enviar notificações</button>
                         </form>
                     </div>
 
@@ -609,9 +644,7 @@ PAGE = """
                     </div>
                 </div>
             </div>
-        </section>
 
-        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Store API Bridge</h2>
@@ -660,7 +693,9 @@ PAGE = """
                     </form>
                 </div>
             </div>
+        </section>
 
+        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">Supplier API Bridge</h2>
@@ -697,9 +732,7 @@ PAGE = """
                     </form>
                 </div>
             </div>
-        </section>
 
-        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">System Links</h2>
@@ -711,6 +744,7 @@ PAGE = """
                         <a class="link-chip" href="/api/dashboard" target="_blank">Dashboard JSON</a>
                         <a class="link-chip" href="/api/products" target="_blank">Produtos</a>
                         <a class="link-chip" href="/api/orders" target="_blank">Encomendas</a>
+                        <a class="link-chip" href="/api/order-intake" target="_blank">Order Intake</a>
                         <a class="link-chip" href="/api/store-api" target="_blank">Store API</a>
                         <a class="link-chip" href="/api/supplier-api" target="_blank">Supplier API</a>
                         <a class="link-chip" href="/api/fulfillment" target="_blank">Fulfillment</a>
@@ -727,7 +761,9 @@ PAGE = """
                     </div>
                 </div>
             </div>
+        </section>
 
+        <section class="layout">
             <div class="panel">
                 <div class="panel-header">
                     <h2 class="panel-title">API Logs</h2>
@@ -745,6 +781,20 @@ PAGE = """
                     <div class="terminal">
                         <div class="terminal-top">Supplier API</div>
                         <pre>{{ supplier_api_history }}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Order Intake Log</h2>
+                    <span class="small">Entrada de encomendas</span>
+                </div>
+
+                <div class="panel-body">
+                    <div class="terminal">
+                        <div class="terminal-top">Último evento</div>
+                        <pre>{{ order_intake_latest }}</pre>
                     </div>
                 </div>
             </div>
@@ -818,6 +868,7 @@ def create_app():
         store_api = data.get("store_api", {})
         supplier_api = data.get("supplier_api", {})
         fulfillment = data.get("fulfillment", {})
+        order_intake = data.get("order_intake", {})
 
         return render_template_string(
             PAGE,
@@ -830,6 +881,7 @@ def create_app():
             store_api=store_api,
             supplier_api=supplier_api,
             fulfillment=fulfillment,
+            order_intake=order_intake,
             autopilot_config=json_text(
                 data.get("autopilot", {}).get("config", {})
             ),
@@ -841,6 +893,9 @@ def create_app():
             ),
             fulfillment_latest=json_text(
                 fulfillment.get("latest_event", {})
+            ),
+            order_intake_latest=json_text(
+                order_intake.get("latest_event", {})
             ),
             raw=json_text(data)
         )
@@ -856,6 +911,12 @@ def create_app():
     @app.route("/api/orders", methods=["GET"])
     def api_orders():
         return jsonify(brain().orders_all())
+
+    @app.route("/api/order-intake", methods=["GET"])
+    def api_order_intake():
+        return jsonify({
+            "history": brain().order_intake_history()
+        })
 
     @app.route("/api/campaigns", methods=["GET"])
     def api_campaigns():
@@ -889,6 +950,30 @@ def create_app():
             "history": brain().fulfillment_pipeline_history()
         })
 
+    @app.route("/action/import-test-order", methods=["POST"])
+    def action_import_test_order():
+        brain().import_test_order(
+            request.form.get("product_id", 1),
+            request.form.get("customer_name", "Cliente Teste"),
+            request.form.get("customer_email", "teste@email.com"),
+            request.form.get("quantity", 1)
+        )
+
+        return redirect(url_for("index"))
+
+    @app.route("/action/import-order-json", methods=["POST"])
+    def action_import_order_json():
+        provider = request.form.get("provider", "custom")
+        payload_text = request.form.get("payload", "{}")
+
+        try:
+            payload = json.loads(payload_text)
+            brain().import_order(payload, provider)
+        except Exception as error:
+            brain().memory.set("last_order_intake_error", str(error))
+
+        return redirect(url_for("index"))
+
     @app.route("/action/store-autopilot", methods=["POST"])
     def action_store_autopilot():
         brain().run_store_autopilot(
@@ -912,25 +997,9 @@ def create_app():
 
         return redirect(url_for("index"))
 
-    @app.route("/action/create-order", methods=["POST"])
-    def action_create_order():
-        brain().create_order(
-            request.form.get("product_id"),
-            request.form.get("customer_name"),
-            request.form.get("customer_email"),
-            request.form.get("quantity", 1)
-        )
-
-        return redirect(url_for("index"))
-
     @app.route("/action/send-notifications", methods=["POST"])
     def action_send_notifications():
         brain().send_notifications()
-        return redirect(url_for("index"))
-
-    @app.route("/action/auto-reply-support", methods=["POST"])
-    def action_auto_reply_support():
-        brain().auto_reply_support_all()
         return redirect(url_for("index"))
 
     @app.route("/action/store-api-config", methods=["POST"])

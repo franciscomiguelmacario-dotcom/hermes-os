@@ -76,6 +76,11 @@ class DashboardEngine:
             []
         )
 
+        order_intake_history = self.safe(
+            "order_intake_history",
+            []
+        )
+
         active_products = [
             product for product in products
             if product.get("status") == "active"
@@ -104,6 +109,12 @@ class DashboardEngine:
             or order.get("status") == "supplier_dry_run_prepared"
         ]
 
+        imported_orders = [
+            order for order in orders
+            if order.get("order_source")
+            or order.get("external_order_id")
+        ]
+
         dashboard = {
             "status": "dashboard_ready",
             "generated_at": datetime.now().isoformat(),
@@ -112,6 +123,7 @@ class DashboardEngine:
                 "active_products": self.count_list(active_products),
                 "supplier_products": self.count_list(supplier_products),
                 "orders": self.count_list(orders),
+                "imported_orders": self.count_list(imported_orders),
                 "pending_orders": self.count_list(pending_orders),
                 "fulfilled_orders": self.count_list(fulfilled_orders),
                 "supplier_submitted_orders": self.count_list(
@@ -130,7 +142,8 @@ class DashboardEngine:
                 "supplier_api_events": self.count_list(supplier_api_history),
                 "fulfillment_events": self.count_list(
                     fulfillment_pipeline_history
-                )
+                ),
+                "order_intake_events": self.count_list(order_intake_history)
             },
             "money": {
                 "revenue": sales_summary.get("revenue", 0),
@@ -149,7 +162,8 @@ class DashboardEngine:
                 "all": orders,
                 "pending": pending_orders,
                 "fulfilled": fulfilled_orders,
-                "supplier_submitted": supplier_submitted_orders
+                "supplier_submitted": supplier_submitted_orders,
+                "imported": imported_orders
             },
             "store_api": {
                 "config": self.mask_sensitive_config(store_api_config),
@@ -170,12 +184,18 @@ class DashboardEngine:
                 ),
                 "history": fulfillment_pipeline_history
             },
+            "order_intake": {
+                "history_count": self.count_list(order_intake_history),
+                "latest_event": self.latest_item(order_intake_history),
+                "history": order_intake_history
+            },
             "autopilot": {
                 "config": autopilot_config,
                 "latest_cycle": self.latest_item(autopilot_history),
                 "cycles_count": self.count_list(autopilot_history)
             },
             "alerts": self.alerts(
+                products,
                 pending_orders,
                 pending_notifications,
                 pending_support,
@@ -202,6 +222,7 @@ class DashboardEngine:
 
     def alerts(
         self,
+        products,
         pending_orders,
         pending_notifications,
         pending_support,
@@ -212,6 +233,12 @@ class DashboardEngine:
         supplier_submitted_orders
     ):
         alerts = []
+
+        if not products:
+            alerts.append({
+                "level": "warning",
+                "message": "Ainda não há produtos internos para receber encomendas."
+            })
 
         if pending_orders:
             alerts.append({
@@ -311,6 +338,9 @@ class DashboardEngine:
 
         if products and not active_campaigns:
             actions.append("Criar campanha para produto ativo.")
+
+        if products:
+            actions.append("Testar entrada de encomenda pelo Order Intake.")
 
         if pending_orders:
             actions.append("Enviar encomendas pendentes ao fornecedor.")
