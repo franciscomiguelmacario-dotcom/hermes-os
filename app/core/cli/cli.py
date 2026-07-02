@@ -45,6 +45,13 @@ class CLI:
                         "add-supplier-product <title> | <cost> | <shipping_days> | <url> | <category>",
                         "score-suppliers",
                         "best-supplier-product",
+                        "product-research <query>",
+                        "product-candidates",
+                        "best-product-candidate",
+                        "marketing-plan <product_id> | <platform>",
+                        "marketing-plans",
+                        "organic-plan <product_id> | <days>",
+                        "organic-plans",
                         "products",
                         "launch-best-product <margin_percent>",
                         "orders",
@@ -276,6 +283,85 @@ class CLI:
 
             if cmd == "best-supplier-product":
                 self.logger.info(self.brain.best_supplier_product())
+                continue
+
+            if cmd.startswith("product-research"):
+                query = cmd.replace("product-research", "", 1).strip()
+
+                if not query:
+                    query = "produto vencedor"
+
+                self.logger.info(self.brain.run_product_research(query))
+                continue
+
+            if cmd == "product-candidates":
+                self.logger.info(self.brain.product_candidates())
+                continue
+
+            if cmd == "best-product-candidate":
+                self.logger.info(self.brain.best_product_candidate())
+                continue
+
+            if cmd.startswith("marketing-plan"):
+                raw = cmd.replace("marketing-plan", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|") if p.strip()]
+
+                product_id = parts[0] if len(parts) > 0 else None
+                platform = parts[1] if len(parts) > 1 else "multi"
+
+                known_platforms = [
+                    "multi",
+                    "meta",
+                    "meta ads",
+                    "facebook",
+                    "facebook ads",
+                    "instagram",
+                    "tiktok",
+                    "tiktok ads",
+                    "google",
+                    "google ads"
+                ]
+
+                if (
+                    len(parts) == 1
+                    and parts[0].lower() in known_platforms
+                ):
+                    product_id = None
+                    platform = parts[0]
+
+                self.logger.info(
+                    self.brain.create_marketing_plan(
+                        product_id,
+                        platform
+                    )
+                )
+                continue
+
+            if cmd == "marketing-plans":
+                self.logger.info(self.brain.marketing_plans())
+                continue
+
+            if cmd.startswith("organic-plan"):
+                raw = cmd.replace("organic-plan", "", 1).strip()
+                parts = [p.strip() for p in raw.split("|") if p.strip()]
+
+                product_id = parts[0] if len(parts) > 0 else None
+                days = parts[1] if len(parts) > 1 else 7
+
+                if len(parts) == 1 and parts[0].isdigit():
+                    product_id = None
+                    days = parts[0]
+
+                self.logger.info(
+                    self.brain.create_organic_plan(
+                        product_id,
+                        days
+                    )
+                )
+                continue
+
+            if cmd == "organic-plans":
+                self.logger.info(self.brain.organic_plans())
                 continue
 
             if cmd.startswith("launch-best-product"):

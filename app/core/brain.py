@@ -394,6 +394,143 @@ class Brain:
     def best_supplier_product(self):
         return self.scoring.best_product()
 
+    def business_agent(self, name):
+        agent = self.agents.get(name)
+
+        if not agent:
+            return None
+
+        return agent
+
+    def product_candidates(self):
+        candidates = self.memory.get("product_candidates", [])
+        return candidates if isinstance(candidates, list) else []
+
+    def best_product_candidate(self):
+        candidate = self.memory.get("best_product_candidate")
+
+        if candidate:
+            return {
+                "status": "ok",
+                "candidate": candidate
+            }
+
+        candidates = self.product_candidates()
+
+        if not candidates:
+            return {
+                "status": "error",
+                "message": "no product candidates available"
+            }
+
+        candidate = sorted(
+            candidates,
+            key=lambda item: int(item.get("score") or 0),
+            reverse=True
+        )[0]
+
+        self.memory.set("best_product_candidate", candidate)
+
+        return {
+            "status": "ok",
+            "candidate": candidate
+        }
+
+    def run_product_research(self, query="produto vencedor", niche=None):
+        agent = self.business_agent("product_research")
+
+        if not agent or not hasattr(agent, "research_products"):
+            return {
+                "status": "error",
+                "message": "product research agent unavailable"
+            }
+
+        return agent.research_products(query=query, niche=niche)
+
+    def request_product_research(self, query="produto vencedor", niche=None):
+        if not self.bus:
+            return self.run_product_research(query, niche)
+
+        self.bus.emit(
+            "dropshipping.product_research.requested",
+            {
+                "query": query,
+                "niche": niche
+            }
+        )
+
+        return self.memory.get("last_product_research", {
+            "status": "requested"
+        })
+
+    def marketing_plans(self):
+        plans = self.memory.get("marketing_plans", [])
+        return plans if isinstance(plans, list) else []
+
+    def create_marketing_plan(self, product_id=None, platform="multi"):
+        agent = self.business_agent("marketing")
+
+        if not agent or not hasattr(agent, "create_marketing_plan"):
+            return {
+                "status": "error",
+                "message": "marketing agent unavailable"
+            }
+
+        return agent.create_marketing_plan(
+            product_id=product_id,
+            platform=platform
+        )
+
+    def request_marketing_plan(self, product_id=None, platform="multi"):
+        if not self.bus:
+            return self.create_marketing_plan(product_id, platform)
+
+        self.bus.emit(
+            "dropshipping.marketing.requested",
+            {
+                "product_id": product_id,
+                "platform": platform
+            }
+        )
+
+        return self.memory.get("last_marketing_plan", {
+            "status": "requested"
+        })
+
+    def organic_plans(self):
+        plans = self.memory.get("organic_content_plans", [])
+        return plans if isinstance(plans, list) else []
+
+    def create_organic_plan(self, product_id=None, days=7):
+        agent = self.business_agent("organic")
+
+        if not agent or not hasattr(agent, "create_content_plan"):
+            return {
+                "status": "error",
+                "message": "organic traffic agent unavailable"
+            }
+
+        return agent.create_content_plan(
+            product_id=product_id,
+            days=days
+        )
+
+    def request_organic_plan(self, product_id=None, days=7):
+        if not self.bus:
+            return self.create_organic_plan(product_id, days)
+
+        self.bus.emit(
+            "dropshipping.organic.requested",
+            {
+                "product_id": product_id,
+                "days": days
+            }
+        )
+
+        return self.memory.get("last_organic_plan", {
+            "status": "requested"
+        })
+
     def pricing_config(self):
         return self.pricing.config()
 
@@ -744,6 +881,9 @@ class Brain:
             "supplier_api_config": self.supplier_api_config(),
             "store_products": self.store_products(),
             "supplier_products": self.supplier_products(),
+            "product_candidates": self.product_candidates(),
+            "marketing_plans": self.marketing_plans(),
+            "organic_plans": self.organic_plans(),
             "orders": self.orders_all(),
             "order_intake_history": self.order_intake_history(),
             "sales_summary": self.sales_summary(),

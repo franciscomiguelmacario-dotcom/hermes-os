@@ -64,6 +64,9 @@ class DashboardEngine:
         campaign_performance = self.safe("campaign_performance", {})
         autopilot_config = self.safe("store_autopilot_config", {})
         autopilot_history = self.safe("store_autopilot_history", [])
+        product_candidates = self.safe("product_candidates", [])
+        marketing_plans = self.safe("marketing_plans", [])
+        organic_plans = self.safe("organic_plans", [])
 
         store_api_config = self.safe("store_api_config", {})
         store_api_history = self.safe("store_api_history", [])
@@ -143,7 +146,10 @@ class DashboardEngine:
                 "fulfillment_events": self.count_list(
                     fulfillment_pipeline_history
                 ),
-                "order_intake_events": self.count_list(order_intake_history)
+                "order_intake_events": self.count_list(order_intake_history),
+                "product_candidates": self.count_list(product_candidates),
+                "marketing_plans": self.count_list(marketing_plans),
+                "organic_plans": self.count_list(organic_plans)
             },
             "money": {
                 "revenue": sales_summary.get("revenue", 0),
@@ -193,6 +199,17 @@ class DashboardEngine:
                 "config": autopilot_config,
                 "latest_cycle": self.latest_item(autopilot_history),
                 "cycles_count": self.count_list(autopilot_history)
+            },
+            "business_agents": {
+                "product_candidates": product_candidates,
+                "best_product_candidate": self.safe(
+                    "best_product_candidate",
+                    {}
+                ),
+                "latest_marketing_plan": self.latest_item(marketing_plans),
+                "latest_organic_plan": self.latest_item(organic_plans),
+                "marketing_plans": marketing_plans,
+                "organic_plans": organic_plans
             },
             "alerts": self.alerts(
                 products,
